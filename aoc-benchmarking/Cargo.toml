@@ -1,0 +1,15 @@
+[package]
+name = "aoc-benchmarking"
+version = "0.1.0"
+edition = "2021"
+description = "Wrapper for having benchmarks in a single place."
+
+[[bench]]
+name = "bench_main"
+harness = false
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[dependencies]
+aoc-plumbing = { path = "../aoc-plumbing" }

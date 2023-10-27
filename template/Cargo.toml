@@ -1,0 +1,17 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2021"
+description = "{{project-name|title_case|downcase}}"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aoc-plumbing = { path = "../aoc-plumbing" }
+aoc-std = { workspace = true }
+anyhow = { workspace = true }
+# itertools = { workspace = true }
+nom = { workspace = true }
+# rayon = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,3 @@
+[placeholders.day]
+type = "string"
+prompt = "What day?"
