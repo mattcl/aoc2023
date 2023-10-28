@@ -33,11 +33,11 @@ echo "$VERSION" > release/VERSION
 echo "Packaging $VERSION for $TARGET"
 
 mkdir dist
-cp "repo/target/release/$BIN_NAME" dist/
+cp "repo/target/release/aoc" dist/
 
 cd dist
 ARCHIVE="aoc-${VERSION}-${TARGET}.tar.gz"
-tar czf "$ARCHIVE" "$BIN_NAME"
+tar czf "$ARCHIVE" "aoc"
 cd ../
 
 mv "dist/$ARCHIVE" "release/$ARCHIVE"
