@@ -11,7 +11,7 @@ exclude = ["template"]
 
 [workspace.dependencies]
 anyhow = "1.0.75"
-aoc-std = { version = "0.1.0", registry = "ancalagon" }
+aoc-std = { version = "0.1.2", registry = "ancalagon" }
 itertools = "0.11.0"
 nom = { version = "7.1", features = ["alloc"] }
 num = "0.4.1"
