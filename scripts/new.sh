@@ -6,6 +6,9 @@ set -e
 
 cargo generate --path ./template --lib --name "$2" -d day="$1"
 
+# increment the minor version number of the CLI so we get a unique bin in CI
+cargo set-version -p aoc-cli --bump minor
+
 printf -v DAY "%03d" "$1"
 
 EXPECTED="$2"
