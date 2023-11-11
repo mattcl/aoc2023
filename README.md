@@ -4,7 +4,15 @@ This workspace provides an executable named `aoc` that produces solutions for a
 given day and input. This is done either through the `run` subcommand or via a
 day-specific subcommand.
 
+
 ## Developing
+
+**A note about compiling this yourself:** I have my
+[`aoc-std`](https://github.com/mattcl/aoc-std.git) crate published to a private
+registry that will likely be inaccessible for you. You can swap that out for the
+version specified by a direct link to the git repo. There's a comment in the
+top-level (workspace) `Cargo.toml` explaining how to do this.
+
 
 ### Prerequisite
 
