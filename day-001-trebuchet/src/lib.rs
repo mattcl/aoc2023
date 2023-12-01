@@ -28,6 +28,18 @@ fn extract_digit_from_slice(slice: &[u8]) -> u32 {
     }
 }
 
+fn sum_lines(lines: &[Vec<u32>]) -> u32 {
+    let mut sum = 0;
+    for line in lines.iter() {
+        sum += match line.as_slice() {
+            [] => 0,
+            [a] => a * 10 + a,
+            [a, .., b] => a * 10 + b,
+        };
+    }
+    sum
+}
+
 #[derive(Debug, Clone)]
 pub struct Trebuchet {
     lines: Vec<Vec<u32>>,
@@ -38,7 +50,6 @@ impl FromStr for Trebuchet {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // let lines = s.trim().split("\n").map(|l| l.chars().filter(|ch| ch.is_digit(10)).map(|ch| ch.to_digit(10).unwrap()).collect::<Vec<_>>()).collect::<Vec<_>>();
         let mut lines = Vec::default();
         let mut letter_lines = Vec::default();
 
@@ -85,27 +96,11 @@ impl Problem for Trebuchet {
     type P2 = u32;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
-        let mut sum = 0;
-        for line in self.lines.iter() {
-            sum += match line.as_slice() {
-                [] => 0,
-                [a] => a * 10 + a,
-                [a, .., b] => a * 10 + b,
-            };
-        }
-        Ok(sum)
+        Ok(sum_lines(&self.lines))
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        let mut sum = 0;
-        for line in self.letter_lines.iter() {
-            sum += match line.as_slice() {
-                [] => 0,
-                [a] => a * 10 + a,
-                [a, .., b] => a * 10 + b,
-            };
-        }
-        Ok(sum)
+        Ok(sum_lines(&self.letter_lines))
     }
 }
 
