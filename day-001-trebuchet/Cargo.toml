@@ -1,0 +1,12 @@
+[package]
+name = "trebuchet"
+version = "0.1.0"
+edition = "2021"
+description = "trebuchet"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aoc-plumbing = { path = "../aoc-plumbing" }
+anyhow = { workspace = true }
+serde = { workspace = true }

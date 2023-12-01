@@ -77,11 +77,12 @@ version = "0.1.0"
 dependencies = [
  "aoc-plumbing",
  "criterion",
+ "trebuchet",
 ]
 
 [[package]]
 name = "aoc-cli"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -89,6 +90,7 @@ dependencies = [
  "clap_complete",
  "serde",
  "serde_json",
+ "trebuchet",
 ]
 
 [[package]]
@@ -599,6 +601,15 @@ checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
 dependencies = [
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "trebuchet"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "serde",
 ]
 
 [[package]]
