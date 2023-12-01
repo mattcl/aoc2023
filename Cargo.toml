@@ -13,8 +13,8 @@ exclude = ["template"]
 anyhow = "1.0.75"
 # if you're trying to build this without access to the ancalagon registry,
 # comment out this line and uncomment the git-specified one
-aoc-std = { version = "0.3.2", registry = "ancalagon" }
-# aoc-std = { version = "0.3.2", git = "https://github.com/mattcl/aoc-std.git" }
+aoc-std = { version = "0.3.4", registry = "ancalagon" }
+# aoc-std = { version = "0.3.4", git = "https://github.com/mattcl/aoc-std.git" }
 itertools = "0.12.0"
 nom = { version = "7.1", features = ["alloc"] }
 num = "0.4.1"
