@@ -62,8 +62,8 @@ impl Set {
         }
     }
 
-    pub fn power(&self) -> u16 {
-        self.r * self.g * self.b
+    pub fn power(&self) -> u32 {
+        self.r as u32 * self.g as u32 * self.b as u32
     }
 
     pub fn subset(&self, other: &Set) -> bool {
@@ -107,7 +107,7 @@ impl Game {
         self.minimum.subset(set)
     }
 
-    pub fn power(&self) -> u16 {
+    pub fn power(&self) -> u32 {
         self.minimum.power()
     }
 }
@@ -144,7 +144,7 @@ impl Problem for CubeConundrum {
 
     type ProblemError = anyhow::Error;
     type P1 = u16;
-    type P2 = u16;
+    type P2 = u32;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
         let reference_set = Set {
