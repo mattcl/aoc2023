@@ -7,6 +7,7 @@ use anyhow::{Context, Result};
 use aoc_plumbing::Problem;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, shells::Zsh};
+use cube_conundrum::CubeConundrum;
 use trebuchet::Trebuchet;
 // import_marker
 
@@ -166,5 +167,6 @@ impl GenerateCompletions {
 
 generate_cli! {
     (Trebuchet, 1),
+    (CubeConundrum, 2),
     // command_marker
 }
