@@ -5,9 +5,9 @@ use aoc_plumbing::Problem;
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{self, alpha1, multispace1, space1},
+    character::complete::{self, alpha1, multispace0, space1},
     combinator,
-    multi::{fold_many1, separated_list1},
+    multi::fold_many1,
     sequence::{preceded, separated_pair, tuple},
     IResult,
 };
@@ -113,21 +113,40 @@ fn parse_game(input: &str) -> IResult<&str, Game> {
     )(input)
 }
 
-fn parse_games(input: &str) -> IResult<&str, Vec<Game>> {
-    separated_list1(multispace1, parse_game)(input)
+// this is another day where the rest of the operations are so fast, that
+// solving this in the parsing step makes sense.
+fn fold_games(input: &str) -> IResult<&str, (u16, u32)> {
+    let constraint = Set {
+        r: 12,
+        g: 13,
+        b: 14,
+    };
+
+    fold_many1(
+        preceded(multispace0, parse_game),
+        || (0_u16, 0_u32),
+        move |mut pair, game: Game| {
+            if game.minimum.subset(&constraint) {
+                pair.0 += game.id;
+            }
+            pair.1 += game.minimum.power();
+            pair
+        },
+    )(input)
 }
 
 #[derive(Debug, Clone)]
 pub struct CubeConundrum {
-    games: Vec<Game>,
+    p1: u16,
+    p2: u32,
 }
 
 impl FromStr for CubeConundrum {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (_, games) = parse_games(s).map_err(|e| e.to_owned())?;
-        Ok(Self { games })
+        let (_, (p1, p2)) = fold_games(s).map_err(|e| e.to_owned())?;
+        Ok(Self { p1, p2 })
     }
 }
 
@@ -141,21 +160,11 @@ impl Problem for CubeConundrum {
     type P2 = u32;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
-        let reference_set = Set {
-            r: 12,
-            g: 13,
-            b: 14,
-        };
-        Ok(self
-            .games
-            .iter()
-            .filter(|s| s.is_possible(&reference_set))
-            .map(|g| g.id)
-            .sum())
+        Ok(self.p1)
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        Ok(self.games.iter().map(|g| g.power()).sum())
+        Ok(self.p2)
     }
 }
 

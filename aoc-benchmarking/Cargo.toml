@@ -9,7 +9,7 @@ name = "bench_main"
 harness = false
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = { version = "0.5.1", features = ["csv_output"] }
 
 [dependencies]
 aoc-plumbing = { path = "../aoc-plumbing" }

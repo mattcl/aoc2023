@@ -15,15 +15,13 @@ aoc_benches! {
         day_001,
         "../day-001-trebuchet/input.txt",
         Trebuchet,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     (
         day_002,
         "../day-002-cube-conundrum/input.txt",
         CubeConundrum,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     // bench_marker
 }

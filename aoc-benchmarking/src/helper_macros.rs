@@ -14,7 +14,7 @@ macro_rules! aoc_bench {
                 let mut problem = <$problem>::instance(&input).expect("Could not parse input");
                 b.iter(|| problem.part_two().expect("Failed to solve part two"))
             });
-            group.bench_function("Combined", |b| {
+            group.bench_function("Combined (including parsing)", |b| {
                 b.iter(|| <$problem>::solve(&input).expect("Failed to solve"))
             });
             group.finish();
