@@ -3,11 +3,12 @@ use std::str::FromStr;
 use anyhow::anyhow;
 use aoc_plumbing::Problem;
 use nom::{
+    branch::alt,
     bytes::complete::tag,
     character::complete::{self, alpha1, multispace1, space1},
     combinator,
-    multi::separated_list1,
-    sequence::{preceded, separated_pair},
+    multi::{fold_many1, separated_list1},
+    sequence::{preceded, separated_pair, tuple},
     IResult,
 };
 
@@ -71,21 +72,19 @@ impl Set {
     }
 }
 
-fn parse_set(input: &str) -> IResult<&str, Set> {
-    let (input, quantities) = separated_list1(tag(", "), parse_quantity)(input)?;
-    let mut s = Set::default();
-    for q in quantities {
-        match q.color {
-            Color::RED => s.r += q.num,
-            Color::GREEN => s.g += q.num,
-            Color::BLUE => s.b += q.num,
-        }
-    }
-    Ok((input, s))
-}
-
-fn parse_sets(input: &str) -> IResult<&str, Vec<Set>> {
-    separated_list1(tag("; "), parse_set)(input)
+fn fold_set(input: &str) -> IResult<&str, Set> {
+    fold_many1(
+        preceded(alt((tag(", "), tag("; "), tag(": "))), parse_quantity),
+        Set::default,
+        |mut s: Set, q| {
+            match q.color {
+                Color::RED => s.r = s.r.max(q.num),
+                Color::GREEN => s.g = s.g.max(q.num),
+                Color::BLUE => s.b = s.b.max(q.num),
+            }
+            s
+        },
+    )(input)
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -95,12 +94,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(id: u16, sets: &[Set]) -> Self {
-        let mut minimum = Set::default();
-        for s in sets {
-            minimum = s.maximums(&minimum);
-        }
-
+    pub fn new(id: u16, minimum: Set) -> Self {
         Self { id, minimum }
     }
     pub fn is_possible(&self, set: &Set) -> bool {
@@ -114,8 +108,8 @@ impl Game {
 
 fn parse_game(input: &str) -> IResult<&str, Game> {
     combinator::map(
-        separated_pair(preceded(tag("Game "), complete::u16), tag(": "), parse_sets),
-        |(id, sets)| Game::new(id, &sets),
+        tuple((preceded(tag("Game "), complete::u16), fold_set)),
+        |(id, set)| Game::new(id, set),
     )(input)
 }
 
