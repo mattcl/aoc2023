@@ -28,8 +28,7 @@ aoc_benches! {
         day_003,
         "../day-003-gear-ratios/input.txt",
         GearRatios,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     // bench_marker
 }
