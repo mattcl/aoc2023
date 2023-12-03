@@ -2,6 +2,7 @@ use criterion::criterion_main;
 
 use aoc_benchmarking::aoc_benches;
 use cube_conundrum::CubeConundrum;
+use gear_ratios::GearRatios;
 use trebuchet::Trebuchet;
 // import_marker
 
@@ -22,6 +23,13 @@ aoc_benches! {
         "../day-002-cube-conundrum/input.txt",
         CubeConundrum,
         "Combined (including parsing)"
+    ),
+    (
+        day_003,
+        "../day-003-gear-ratios/input.txt",
+        GearRatios,
+        "Part 1",
+        "Part 2"
     ),
     // bench_marker
 }

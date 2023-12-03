@@ -15,3 +15,4 @@ criterion = { version = "0.5.1", features = ["csv_output"] }
 aoc-plumbing = { path = "../aoc-plumbing" }
 trebuchet = { path = "../day-001-trebuchet" }
 cube-conundrum = { path = "../day-002-cube-conundrum" }
+gear-ratios = { path = "../day-003-gear-ratios" }

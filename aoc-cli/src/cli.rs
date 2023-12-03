@@ -8,6 +8,7 @@ use aoc_plumbing::Problem;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, shells::Zsh};
 use cube_conundrum::CubeConundrum;
+use gear_ratios::GearRatios;
 use trebuchet::Trebuchet;
 // import_marker
 
@@ -168,5 +169,6 @@ impl GenerateCompletions {
 generate_cli! {
     (Trebuchet, 1),
     (CubeConundrum, 2),
+    (GearRatios, 3),
     // command_marker
 }
