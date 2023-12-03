@@ -20,44 +20,30 @@ impl Number {
 #[derive(Debug, Clone)]
 pub struct GearRatios {
     chars: Grid<char>,
+    candidates: FxHashSet<Location>,
+    potential_gears: FxHashMap<Location, Vec<Location>>,
 }
 
 impl GearRatios {
     // find all the symbols and then check all candidate spaces around them for
     // numbers
     pub fn find_numbers(&self) -> u32 {
-        let mut candidates: FxHashSet<Location> = FxHashSet::default();
-
-        for row in 0..self.chars.height() {
-            for col in 0..self.chars.width() {
-                let loc = Location::new(row, col);
-                let s = self.chars.locations[row][col];
-                if !(s.is_digit(10) || s == '.') {
-                    for (_, n, ch) in self.chars.neighbors(&loc) {
-                        if ch.is_digit(10) {
-                            candidates.insert(n);
-                        }
-                    }
-                }
-            }
-        }
-
         let mut processed: FxHashSet<Location> = FxHashSet::default();
 
         let mut total_sum = 0;
 
         // we need to turn all the candidate locations into numbers
-        'outer: for can in candidates {
-            if processed.contains(&can) {
+        'outer: for can in self.candidates.iter() {
+            if processed.contains(can) {
                 continue;
             }
-            processed.insert(can);
+            processed.insert(*can);
             let mut number = VecDeque::default();
 
             // we know this is safe
-            number.push_back(self.chars.get(&can).unwrap().to_digit(10).unwrap());
+            number.push_back(self.chars.get(can).unwrap().to_digit(10).unwrap());
 
-            let mut working = can;
+            let mut working = *can;
             while let Some(west) = working.west() {
                 if let Some(v) = self.chars.get(&west) {
                     if processed.contains(&west) {
@@ -73,7 +59,7 @@ impl GearRatios {
                 break;
             }
 
-            let mut working = can;
+            let mut working = *can;
             while let Some(east) = working.east() {
                 if let Some(v) = self.chars.get(&east) {
                     if processed.contains(&east) {
@@ -102,41 +88,24 @@ impl GearRatios {
     }
 
     pub fn find_gears(&self) -> u32 {
-        let mut candidates: FxHashMap<Location, Vec<Location>> = FxHashMap::default();
-
-        for row in 0..self.chars.height() {
-            for col in 0..self.chars.width() {
-                let loc = Location::new(row, col);
-                let s = self.chars.locations[row][col];
-                if s == '*' {
-                    for (_, n, ch) in self.chars.neighbors(&loc) {
-                        if ch.is_digit(10) {
-                            let e = candidates.entry(loc).or_default();
-                            e.push(n);
-                        }
-                    }
-                }
-            }
-        }
-
         let mut total_sum = 0;
 
-        for (_gear, gear_candidates) in candidates {
+        for (_gear, gear_candidates) in self.potential_gears.iter() {
             let mut processed: FxHashSet<Location> = FxHashSet::default();
             let mut nums = Vec::default();
 
             // we need to turn all the candidate locations into numbers
             'outer: for can in gear_candidates {
-                if processed.contains(&can) {
+                if processed.contains(can) {
                     continue;
                 }
-                processed.insert(can);
+                processed.insert(*can);
                 let mut number = VecDeque::default();
 
                 // we know this is safe
-                number.push_back(self.chars.get(&can).unwrap().to_digit(10).unwrap());
+                number.push_back(self.chars.get(can).unwrap().to_digit(10).unwrap());
 
-                let mut working = can;
+                let mut working = *can;
                 while let Some(west) = working.west() {
                     if let Some(v) = self.chars.get(&west) {
                         if processed.contains(&west) {
@@ -152,7 +121,7 @@ impl GearRatios {
                     break;
                 }
 
-                let mut working = can;
+                let mut working = *can;
                 while let Some(east) = working.east() {
                     if let Some(v) = self.chars.get(&east) {
                         if processed.contains(&east) {
@@ -194,8 +163,33 @@ impl FromStr for GearRatios {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let chars: Grid<char> = Grid::from_str(s)?;
+
+        let mut candidates = FxHashSet::default();
+        let mut potential_gears: FxHashMap<Location, Vec<Location>> = FxHashMap::default();
+
+        for row in 0..chars.height() {
+            for col in 0..chars.width() {
+                let loc = Location::new(row, col);
+                let s = chars.locations[row][col];
+                if !(s.is_digit(10) || s == '.') {
+                    for (_, n, ch) in chars.neighbors(&loc) {
+                        if ch.is_digit(10) {
+                            candidates.insert(n);
+                            if s == '*' {
+                                let e = potential_gears.entry(loc).or_default();
+                                e.push(n);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(Self {
-            chars: Grid::from_str(s)?,
+            chars,
+            candidates,
+            potential_gears,
         })
     }
 }
