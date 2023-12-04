@@ -6,6 +6,7 @@ image_resource:
     tag: 1.74
 
 inputs:
+  - name: aoc-tools
   - name: repo
 
 outputs:

@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# unpack and install the tools
+cd aoc-tools
+tar -xvf aoc-tools-*-x86_64-unknown-linux-musl.tar.gz
+mv aoc-tools /usr/local/bin/
+cd ../
+
 # our task has called our input repo
 cd repo
 
@@ -18,6 +24,9 @@ just bench-all
 
 # build the cli
 just build-cli
+
+# summary
+aoc-tools criterion-summary target/criterion
 
 # package the release into a tarball for export
 
