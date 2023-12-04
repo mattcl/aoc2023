@@ -8,7 +8,7 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, tuple},
     IResult,
 };
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashMap;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Card {
@@ -26,12 +26,13 @@ impl Card {
     }
 }
 
-fn parse_map(input: &str) -> IResult<&str, FxHashSet<u8>> {
+fn parse_map(input: &str) -> IResult<&str, u128> {
     fold_many1(
         preceded(space0, complete::u8),
-        FxHashSet::default,
+        // the largest number we ever see is only two digits
+        || 0_u128,
         |mut m, v| {
-            m.insert(v);
+            m |= 1 << v;
             m
         },
     )(input)
@@ -47,7 +48,7 @@ fn parse_card(input: &str) -> IResult<&str, Card> {
         parse_map,
     )(input)?;
 
-    let winning_count = winning.intersection(&numbers).count();
+    let winning_count = (winning & numbers).count_ones() as usize;
 
     let card = Card { id, winning_count };
 
