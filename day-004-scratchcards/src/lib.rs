@@ -21,7 +21,7 @@ fn parse_map(input: &str) -> IResult<&str, u128> {
     )(input)
 }
 
-fn parse_card(input: &str) -> IResult<&str, usize> {
+fn parse_card(input: &str) -> IResult<&str, u32> {
     let (input, (winning, numbers)) = separated_pair(
         preceded(
             delimited(tag("Card"), preceded(space0, complete::u32), tag(":")),
@@ -31,19 +31,19 @@ fn parse_card(input: &str) -> IResult<&str, usize> {
         parse_map,
     )(input)?;
 
-    let winning_count = (winning & numbers).count_ones() as usize;
+    let winning_count = (winning & numbers).count_ones();
 
     Ok((input, winning_count))
 }
 
-fn parse_cards(input: &str) -> IResult<&str, Vec<usize>> {
+fn parse_cards(input: &str) -> IResult<&str, Vec<u32>> {
     separated_list1(newline, parse_card)(input)
 }
 
 #[derive(Debug, Clone)]
 pub struct Scratchcards {
     p1: u32,
-    p2: usize,
+    p2: u32,
 }
 
 impl FromStr for Scratchcards {
@@ -52,23 +52,18 @@ impl FromStr for Scratchcards {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (_, cards) = parse_cards(s).map_err(|e| e.to_owned())?;
 
-        let mut counts = vec![1_usize; cards.len()];
+        let mut counts = vec![1_u32; cards.len()];
 
         for (idx, winning_count) in cards.iter().enumerate() {
-            for c_idx in (idx + 1)..(idx + winning_count + 1) {
+            for c_idx in (idx + 1)..(idx + *winning_count as usize + 1) {
                 counts[c_idx] += counts[idx];
             }
         }
 
         let p1 = cards
             .into_iter()
-            .map(|worth| {
-                if worth > 0 {
-                    2_u32.pow(worth as u32 - 1)
-                } else {
-                    0
-                }
-            })
+            // we can just do this with shifts
+            .map(|worth| (1 << worth) >> 1)
             .sum();
         let p2 = counts.iter().sum();
 
@@ -83,7 +78,7 @@ impl Problem for Scratchcards {
 
     type ProblemError = anyhow::Error;
     type P1 = u32;
-    type P2 = usize;
+    type P2 = u32;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
         Ok(self.p1)
