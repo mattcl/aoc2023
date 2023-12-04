@@ -35,8 +35,7 @@ aoc_benches! {
         day_004,
         "../day-004-scratchcards/input.txt",
         Scratchcards,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     // bench_marker
 }

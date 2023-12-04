@@ -5,26 +5,9 @@ use nom::{
     bytes::complete::tag,
     character::complete::{self, newline, space0},
     multi::{fold_many1, separated_list1},
-    sequence::{delimited, preceded, separated_pair, tuple},
+    sequence::{delimited, preceded, separated_pair},
     IResult,
 };
-use rustc_hash::FxHashMap;
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Card {
-    id: u32,
-    winning_count: usize,
-}
-
-impl Card {
-    pub fn worth(&self) -> u32 {
-        if self.winning_count == 0 {
-            return 0;
-        }
-
-        2_u32.pow(self.winning_count as u32 - 1)
-    }
-}
 
 fn parse_map(input: &str) -> IResult<&str, u128> {
     fold_many1(
@@ -38,56 +21,29 @@ fn parse_map(input: &str) -> IResult<&str, u128> {
     )(input)
 }
 
-fn parse_card(input: &str) -> IResult<&str, Card> {
-    let (input, ((id, winning), numbers)) = separated_pair(
-        tuple((
+fn parse_card(input: &str) -> IResult<&str, usize> {
+    let (input, (winning, numbers)) = separated_pair(
+        preceded(
             delimited(tag("Card"), preceded(space0, complete::u32), tag(":")),
             parse_map,
-        )),
+        ),
         tag(" |"),
         parse_map,
     )(input)?;
 
     let winning_count = (winning & numbers).count_ones() as usize;
 
-    let card = Card { id, winning_count };
-
-    Ok((input, card))
+    Ok((input, winning_count))
 }
 
-fn parse_cards(input: &str) -> IResult<&str, Vec<Card>> {
+fn parse_cards(input: &str) -> IResult<&str, Vec<usize>> {
     separated_list1(newline, parse_card)(input)
 }
 
 #[derive(Debug, Clone)]
 pub struct Scratchcards {
-    cards: Vec<Card>,
-}
-
-impl Scratchcards {
-    pub fn recur(&self, idx: usize, memo: &mut FxHashMap<usize, u64>) -> u64 {
-        if let Some(v) = memo.get(&idx) {
-            return *v;
-        }
-
-        if idx >= self.cards.len() {
-            return 0;
-        }
-
-        if self.cards[idx].winning_count == 0 {
-            return 0;
-        }
-
-        let mut sum = self.cards[idx].winning_count as u64;
-
-        for i in 0..self.cards[idx].winning_count {
-            sum += self.recur(idx + i + 1, memo);
-        }
-
-        memo.insert(idx, sum);
-
-        sum
-    }
+    p1: u32,
+    p2: usize,
 }
 
 impl FromStr for Scratchcards {
@@ -95,7 +51,28 @@ impl FromStr for Scratchcards {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (_, cards) = parse_cards(s).map_err(|e| e.to_owned())?;
-        Ok(Self { cards })
+
+        let mut counts = vec![1_usize; cards.len()];
+
+        for (idx, winning_count) in cards.iter().enumerate() {
+            for c_idx in (idx + 1)..(idx + winning_count + 1) {
+                counts[c_idx] += counts[idx];
+            }
+        }
+
+        let p1 = cards
+            .into_iter()
+            .map(|worth| {
+                if worth > 0 {
+                    2_u32.pow(worth as u32 - 1)
+                } else {
+                    0
+                }
+            })
+            .sum();
+        let p2 = counts.iter().sum();
+
+        Ok(Self { p1, p2 })
     }
 }
 
@@ -106,19 +83,14 @@ impl Problem for Scratchcards {
 
     type ProblemError = anyhow::Error;
     type P1 = u32;
-    type P2 = u64;
+    type P2 = usize;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
-        Ok(self.cards.iter().map(|c| c.worth()).sum())
+        Ok(self.p1)
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        let mut memo = FxHashMap::default();
-        let mut sum = 0;
-        for card in self.cards.iter() {
-            sum += 1 + self.recur(card.id as usize - 1, &mut memo);
-        }
-        Ok(sum)
+        Ok(self.p2)
     }
 }
 
