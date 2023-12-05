@@ -86,7 +86,11 @@ fn parse_range_map_entry(input: &str) -> IResult<&str, RangeMapEntry> {
 }
 
 fn parse_range_map_entries(input: &str) -> IResult<&str, Vec<RangeMapEntry>> {
-    separated_list1(newline, parse_range_map_entry)(input)
+    let (input, mut entries) = separated_list1(newline, parse_range_map_entry)(input)?;
+
+    entries.sort_by(|a, b| a.source.start.cmp(&b.source.start));
+
+    Ok((input, entries))
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -174,16 +178,16 @@ impl YouGiveASeedAFertilizer {
         for map in self.range_maps.iter() {
             let mut next_ranges = Vec::with_capacity(ranges.len());
 
-            'splitter: for range in ranges.iter() {
+            'splitter: while let Some(range) = ranges.pop() {
                 for entry in map.entries.iter() {
-                    if entry.contains(range) {
+                    if entry.contains(&range) {
                         // our range is contained entirely by the entry range
                         next_ranges.push(NumRange {
                             start: range.start + entry.destination.start - entry.source.start,
                             end: range.end + entry.destination.start - entry.source.start,
                         });
                         continue 'splitter;
-                    } else if entry.right_of_overlapping(range) {
+                    } else if entry.right_of_overlapping(&range) {
                         // the entry is to our right and we overlap it
                         next_ranges.push(NumRange {
                             start: range.start,
@@ -194,18 +198,18 @@ impl YouGiveASeedAFertilizer {
                             end: range.end + entry.destination.start - entry.source.start,
                         });
                         continue 'splitter;
-                    } else if entry.left_of_overlapping(range) {
+                    } else if entry.left_of_overlapping(&range) {
                         // the entry is to our left and we overlap it
                         next_ranges.push(NumRange {
                             start: range.start + entry.destination.start - entry.source.start,
                             end: entry.source.end + entry.destination.start - range.start,
                         });
-                        next_ranges.push(NumRange {
+                        ranges.push(NumRange {
                             start: entry.source.end + 1,
                             end: range.end,
                         });
                         continue 'splitter;
-                    } else if entry.is_contained_by(range) {
+                    } else if entry.is_contained_by(&range) {
                         // our range entirely contains the entry and extends
                         // beyond it on either side
                         next_ranges.push(NumRange {
@@ -216,16 +220,17 @@ impl YouGiveASeedAFertilizer {
                             start: entry.destination.start,
                             end: entry.destination.end,
                         });
-                        next_ranges.push(NumRange {
+                        ranges.push(NumRange {
                             start: entry.source.end + 1,
                             end: range.end,
                         });
                         continue 'splitter;
                     }
                 }
+
                 // if we're here it means we didn't find _any_ overlaps, so we
                 // need to add ourself back to the next iteration
-                next_ranges.push(*range);
+                next_ranges.push(range);
             }
 
             ranges = next_ranges;
