@@ -202,7 +202,7 @@ impl YouGiveASeedAFertilizer {
                         // the entry is to our left and we overlap it
                         next_ranges.push(NumRange {
                             start: range.start + entry.destination.start - entry.source.start,
-                            end: entry.source.end + entry.destination.start - range.start,
+                            end: entry.source.end + entry.destination.start - entry.source.start,
                         });
                         ranges.push(NumRange {
                             start: entry.source.end + 1,
@@ -227,7 +227,6 @@ impl YouGiveASeedAFertilizer {
                         continue 'splitter;
                     }
                 }
-
                 // if we're here it means we didn't find _any_ overlaps, so we
                 // need to add ourself back to the next iteration
                 next_ranges.push(range);
