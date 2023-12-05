@@ -11,6 +11,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
+use you_give_a_seed_a_fertilizer::YouGiveASeedAFertilizer;
 // import_marker
 
 // I'm not proud
@@ -172,5 +173,6 @@ generate_cli! {
     (CubeConundrum, 2),
     (GearRatios, 3),
     (Scratchcards, 4),
+    (YouGiveASeedAFertilizer, 5),
     // command_marker
 }

@@ -5,6 +5,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
+use you_give_a_seed_a_fertilizer::YouGiveASeedAFertilizer;
 // import_marker
 
 criterion_main! {
@@ -36,6 +37,13 @@ aoc_benches! {
         "../day-004-scratchcards/input.txt",
         Scratchcards,
         "Combined (including parsing)"
+    ),
+    (
+        day_005,
+        "../day-005-you-give-a-seed-a-fertilizer/input.txt",
+        YouGiveASeedAFertilizer,
+        "Part 1",
+        "Part 2"
     ),
     // bench_marker
 }
