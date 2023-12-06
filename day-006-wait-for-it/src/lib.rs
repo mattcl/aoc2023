@@ -21,10 +21,11 @@ impl WaitForIt {
         let t = time as f64;
         let t2 = t * t;
         let r = record as f64;
+        let b = (t2 - 4.0 * r).sqrt();
 
         // solutions for (time - x) * x > record
-        let lower_raw = 0.5 * (t - (t2 - 4.0 * r).sqrt());
-        let upper_raw = 0.5 * (t + (t2 - 4.0 * r).sqrt());
+        let lower_raw = 0.5 * (t - b);
+        let upper_raw = 0.5 * (t + b);
 
         let mut lower = lower_raw.ceil() as i64;
         let mut upper = upper_raw.floor() as i64;
