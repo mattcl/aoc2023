@@ -81,12 +81,13 @@ dependencies = [
  "gear-ratios",
  "scratchcards",
  "trebuchet",
+ "wait-for-it",
  "you-give-a-seed-a-fertilizer",
 ]
 
 [[package]]
 name = "aoc-cli"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -98,6 +99,7 @@ dependencies = [
  "serde",
  "serde_json",
  "trebuchet",
+ "wait-for-it",
  "you-give-a-seed-a-fertilizer",
 ]
 
@@ -918,6 +920,19 @@ name = "utf8parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
+
+[[package]]
+name = "wait-for-it"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rustc-hash",
+ "serde",
+]
 
 [[package]]
 name = "walkdir"

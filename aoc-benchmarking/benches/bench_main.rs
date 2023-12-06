@@ -5,6 +5,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
+use wait_for_it::WaitForIt;
 use you_give_a_seed_a_fertilizer::YouGiveASeedAFertilizer;
 // import_marker
 
@@ -42,6 +43,13 @@ aoc_benches! {
         day_005,
         "../day-005-you-give-a-seed-a-fertilizer/input.txt",
         YouGiveASeedAFertilizer,
+        "Part 1",
+        "Part 2"
+    ),
+    (
+        day_006,
+        "../day-006-wait-for-it/input.txt",
+        WaitForIt,
         "Part 1",
         "Part 2"
     ),
