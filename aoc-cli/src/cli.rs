@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use aoc_plumbing::Problem;
+use camel_cards::CamelCards;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, shells::Zsh};
 use cube_conundrum::CubeConundrum;
@@ -176,5 +177,6 @@ generate_cli! {
     (Scratchcards, 4),
     (YouGiveASeedAFertilizer, 5),
     (WaitForIt, 6),
+    (CamelCards, 7),
     // command_marker
 }
