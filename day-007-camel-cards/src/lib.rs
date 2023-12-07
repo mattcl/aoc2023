@@ -14,19 +14,19 @@ use rustc_hash::FxHashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Card {
-    Ace = 0,
-    King,
-    Queen,
-    Jack,
-    Ten,
-    Nine,
-    Eight,
-    Seven,
-    Six,
-    Five,
-    Four,
+    Two = 0,
     Three,
-    Two,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Jack,
+    Queen,
+    King,
+    Ace,
 }
 
 impl TryFrom<u8> for Card {
@@ -54,19 +54,19 @@ impl TryFrom<u8> for Card {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum JackJokerCard {
-    Ace = 0,
-    King,
-    Queen,
-    Ten,
-    Nine,
-    Eight,
-    Seven,
-    Six,
-    Five,
-    Four,
-    Three,
+    Jack = 0,
     Two,
-    Jack,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Queen,
+    King,
+    Ace,
 }
 
 impl From<Card> for JackJokerCard {
@@ -135,13 +135,13 @@ impl From<&CardSet> for JokerCardSet {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum HandKind {
-    FiveOfAKind = 0,
-    FourOfAKind,
-    FullHouse,
-    ThreeOfAKind,
-    TwoPair,
+    HighCard = 0,
     OnePair,
-    HighCard,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
 }
 
 impl HandKind {
@@ -298,22 +298,19 @@ impl Problem for CamelCards {
         Ok(self
             .hands
             .iter()
-            .rev()
             .enumerate()
             .map(|(rank, hand)| (rank as u64 + 1) * hand.bid)
             .sum())
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        let mut hands = self.hands.clone();
-        hands.sort_by(|a, b| {
+        self.hands.sort_by(|a, b| {
             a.joker_kind
                 .cmp(&b.joker_kind)
                 .then_with(|| a.joker_cards.cmp(&b.joker_cards))
         });
-        Ok(hands
+        Ok(self.hands
             .iter()
-            .rev()
             .enumerate()
             .map(|(rank, hand)| (rank as u64 + 1) * hand.bid)
             .sum())

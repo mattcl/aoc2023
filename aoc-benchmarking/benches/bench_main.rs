@@ -58,8 +58,7 @@ aoc_benches! {
         day_007,
         "../day-007-camel-cards/input.txt",
         CamelCards,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     // bench_marker
 }
