@@ -90,69 +90,56 @@ pub enum HandKind {
 }
 
 impl HandKind {
-    pub fn kinds_for_card_counts(counts: &FxHashMap<u8, usize>) -> (Self, Self) {
+    pub fn kinds_for_card_counts(cards: &CardSet) -> (Self, Self) {
+        let mut counts: FxHashMap<u8, usize> = FxHashMap::default();
+        let mut max = 0;
+        for c in cards.cards.iter() {
+            let e = counts.entry(*c).or_default();
+            *e += 1;
+            if *e > max {
+                max = *e;
+            }
+        }
         let joker_count = counts.get(&JOKER).copied().unwrap_or_default();
 
         let len = counts.len();
 
-        if len == 1 {
-            return (Self::FiveOfAKind, Self::FiveOfAKind);
-        }
-
-        if len == 5 {
-            if joker_count > 0 {
-                return (Self::HighCard, Self::OnePair);
-            } else {
-                return (Self::HighCard, Self::HighCard);
-            }
-        }
-
-        if len == 2 {
-            for value in counts.values() {
-                if *value == 4 || *value == 1 {
-                    if joker_count > 0 {
-                        return (Self::FourOfAKind, Self::FiveOfAKind);
-                    } else {
-                        return (Self::FourOfAKind, Self::FourOfAKind);
-                    }
-                } else if *value == 2 || *value == 3 {
-                    if joker_count > 0 {
-                        return (Self::FullHouse, Self::FiveOfAKind);
-                    } else {
-                        return (Self::FullHouse, Self::FullHouse);
-                    }
-                }
-            }
-        }
-
-        let mut num_pairs = 0;
-        for value in counts.values() {
-            if *value == 3 {
-                if joker_count == 1 || joker_count == 3 {
-                    return (Self::ThreeOfAKind, Self::FourOfAKind);
-                } else {
-                    return (Self::ThreeOfAKind, Self::ThreeOfAKind);
-                }
-            }
-
-            if *value == 2 {
-                num_pairs += 1;
-            }
-        }
-
-        if num_pairs == 2 {
-            return match joker_count {
+        match (len, max) {
+            (1, _) => (Self::FiveOfAKind, Self::FiveOfAKind),
+            (5, _) => match joker_count {
+                0 => (Self::HighCard, Self::HighCard),
+                _ => (Self::HighCard, Self::OnePair),
+            },
+            (2, 4) => match joker_count {
+                0 => (Self::FourOfAKind, Self::FourOfAKind),
+                _ => (Self::FourOfAKind, Self::FiveOfAKind),
+            },
+            (2, _) => match joker_count {
+                0 => (Self::FullHouse, Self::FullHouse),
+                _ => (Self::FullHouse, Self::FiveOfAKind),
+            },
+            (_, 3) => match joker_count {
+                0 => (Self::ThreeOfAKind, Self::ThreeOfAKind),
+                _ => (Self::ThreeOfAKind, Self::FourOfAKind),
+            },
+            (4, _) => match joker_count {
+                0 => (Self::OnePair, Self::OnePair),
+                _ => (Self::OnePair, Self::ThreeOfAKind),
+            },
+            _ => match joker_count {
                 1 => (Self::TwoPair, Self::FullHouse),
                 2 => (Self::TwoPair, Self::FourOfAKind),
                 _ => (Self::TwoPair, Self::TwoPair),
-            };
+            }
         }
 
-        if joker_count > 0 {
-            (Self::OnePair, Self::ThreeOfAKind)
-        } else {
-            (Self::OnePair, Self::OnePair)
-        }
+//         let joker_kind = if joker_count > 0 {
+//             match kind {
+//                 HandKind::FiveOfAKind => HandKind::FiveOfAKind
+//             }
+//         } else {
+//             kind
+//         };
     }
 }
 
@@ -168,13 +155,8 @@ pub struct Hand {
 impl Hand {
     pub fn new(cards: CardSet, bid: u64) -> Self {
         let joker_cards = (&cards).into();
-        let mut counts: FxHashMap<u8, usize> = FxHashMap::default();
-        for c in cards.cards.iter() {
-            let e = counts.entry(*c).or_default();
-            *e += 1;
-        }
 
-        let (kind, joker_kind) = HandKind::kinds_for_card_counts(&counts);
+        let (kind, joker_kind) = HandKind::kinds_for_card_counts(&cards);
         Self {
             kind,
             cards,
