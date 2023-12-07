@@ -99,6 +99,14 @@ impl HandKind {
             return (Self::FiveOfAKind, Self::FiveOfAKind);
         }
 
+        if len == 5 {
+            if joker_count > 0 {
+                return (Self::HighCard, Self::OnePair);
+            } else {
+                return (Self::HighCard, Self::HighCard);
+            }
+        }
+
         if len == 2 {
             for value in counts.values() {
                 if *value == 4 || *value == 1 {
@@ -138,18 +146,12 @@ impl HandKind {
                 2 => (Self::TwoPair, Self::FourOfAKind),
                 _ => (Self::TwoPair, Self::TwoPair),
             };
-        } else if num_pairs == 1 {
-            if joker_count > 0 {
-                return (Self::OnePair, Self::ThreeOfAKind);
-            } else {
-                return (Self::OnePair, Self::OnePair);
-            }
         }
 
         if joker_count > 0 {
-            (Self::HighCard, Self::OnePair)
+            (Self::OnePair, Self::ThreeOfAKind)
         } else {
-            (Self::HighCard, Self::HighCard)
+            (Self::OnePair, Self::OnePair)
         }
     }
 }
@@ -254,7 +256,8 @@ impl Problem for CamelCards {
                 .cmp(&b.joker_kind)
                 .then_with(|| a.joker_cards.cmp(&b.joker_cards))
         });
-        Ok(self.hands
+        Ok(self
+            .hands
             .iter()
             .enumerate()
             .map(|(rank, hand)| (rank as u64 + 1) * hand.bid)
