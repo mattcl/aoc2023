@@ -10,10 +10,8 @@ use nom::{
     sequence::separated_pair,
     IResult,
 };
-use rustc_hash::FxHashMap;
 
-const JOKER: u8 = 16;
-const JOKER_MASK: u8 = !JOKER;
+const JOKER: u8 = 10;
 
 fn card_to_value(card: u8) -> u8 {
     match card {
@@ -27,9 +25,9 @@ fn card_to_value(card: u8) -> u8 {
         b'9' => 8,
         b'T' => 9,
         b'J' => JOKER,
-        b'Q' => 32,
-        b'K' => 33,
-        b'A' => 34,
+        b'Q' => 11,
+        b'K' => 12,
+        b'A' => 13,
         _ => unreachable!(),
     }
 }
@@ -68,11 +66,31 @@ impl From<&CardSet> for JokerCardSet {
     fn from(value: &CardSet) -> Self {
         Self {
             cards: [
-                value.cards[0] & JOKER_MASK,
-                value.cards[1] & JOKER_MASK,
-                value.cards[2] & JOKER_MASK,
-                value.cards[3] & JOKER_MASK,
-                value.cards[4] & JOKER_MASK,
+                if value.cards[0] == JOKER {
+                    0
+                } else {
+                    value.cards[0]
+                },
+                if value.cards[1] == JOKER {
+                    0
+                } else {
+                    value.cards[1]
+                },
+                if value.cards[2] == JOKER {
+                    0
+                } else {
+                    value.cards[2]
+                },
+                if value.cards[3] == JOKER {
+                    0
+                } else {
+                    value.cards[3]
+                },
+                if value.cards[4] == JOKER {
+                    0
+                } else {
+                    value.cards[4]
+                },
             ],
         }
     }
@@ -91,18 +109,21 @@ pub enum HandKind {
 
 impl HandKind {
     pub fn kinds_for_card_counts(cards: &CardSet) -> (Self, Self) {
-        let mut counts: FxHashMap<u8, usize> = FxHashMap::default();
+        // this is faster than allocating a new hash map per hand
+        let mut counts: [u8; 14] = [0; 14];
         let mut max = 0;
+        let mut seen: u16 = 0;
         for c in cards.cards.iter() {
-            let e = counts.entry(*c).or_default();
-            *e += 1;
-            if *e > max {
-                max = *e;
+            seen |= 1 << *c;
+            let idx = *c as usize;
+            counts[idx] += 1;
+            if counts[idx] > max {
+                max = counts[idx];
             }
         }
-        let joker_count = counts.get(&JOKER).copied().unwrap_or_default();
+        let joker_count = counts[JOKER as usize];
 
-        let len = counts.len();
+        let len = seen.count_ones();
 
         match (len, max) {
             (1, _) => (Self::FiveOfAKind, Self::FiveOfAKind),
@@ -130,16 +151,8 @@ impl HandKind {
                 1 => (Self::TwoPair, Self::FullHouse),
                 2 => (Self::TwoPair, Self::FourOfAKind),
                 _ => (Self::TwoPair, Self::TwoPair),
-            }
+            },
         }
-
-//         let joker_kind = if joker_count > 0 {
-//             match kind {
-//                 HandKind::FiveOfAKind => HandKind::FiveOfAKind
-//             }
-//         } else {
-//             kind
-//         };
     }
 }
 
