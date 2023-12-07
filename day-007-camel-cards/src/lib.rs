@@ -12,86 +12,31 @@ use nom::{
 };
 use rustc_hash::FxHashMap;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Card {
-    Two = 0,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-    Ten,
-    Jack,
-    Queen,
-    King,
-    Ace,
-}
+const JOKER: u8 = 16;
+const JOKER_MASK: u8 = !JOKER;
 
-impl TryFrom<u8> for Card {
-    type Error = anyhow::Error;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        Ok(match value {
-            b'A' => Self::Ace,
-            b'K' => Self::King,
-            b'Q' => Self::Queen,
-            b'J' => Self::Jack,
-            b'T' => Self::Ten,
-            b'9' => Self::Nine,
-            b'8' => Self::Eight,
-            b'7' => Self::Seven,
-            b'6' => Self::Six,
-            b'5' => Self::Five,
-            b'4' => Self::Four,
-            b'3' => Self::Three,
-            b'2' => Self::Two,
-            _ => bail!("Unknown card: {}", value),
-        })
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum JackJokerCard {
-    Jack = 0,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-    Ten,
-    Queen,
-    King,
-    Ace,
-}
-
-impl From<Card> for JackJokerCard {
-    fn from(value: Card) -> Self {
-        match value {
-            Card::Ace => Self::Ace,
-            Card::King => Self::King,
-            Card::Queen => Self::Queen,
-            Card::Jack => Self::Jack,
-            Card::Ten => Self::Ten,
-            Card::Nine => Self::Nine,
-            Card::Eight => Self::Eight,
-            Card::Seven => Self::Seven,
-            Card::Six => Self::Six,
-            Card::Five => Self::Five,
-            Card::Four => Self::Four,
-            Card::Three => Self::Three,
-            Card::Two => Self::Two,
-        }
+fn card_to_value(card: u8) -> u8 {
+    match card {
+        b'2' => 1,
+        b'3' => 2,
+        b'4' => 3,
+        b'5' => 4,
+        b'6' => 5,
+        b'7' => 6,
+        b'8' => 7,
+        b'9' => 8,
+        b'T' => 9,
+        b'J' => JOKER,
+        b'Q' => 32,
+        b'K' => 33,
+        b'A' => 34,
+        _ => unreachable!(),
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CardSet {
-    cards: [Card; 5],
+    cards: [u8; 5],
 }
 
 impl FromStr for CardSet {
@@ -104,11 +49,11 @@ impl FromStr for CardSet {
         let bytes = s.as_bytes();
         Ok(Self {
             cards: [
-                bytes[0].try_into()?,
-                bytes[1].try_into()?,
-                bytes[2].try_into()?,
-                bytes[3].try_into()?,
-                bytes[4].try_into()?,
+                card_to_value(bytes[0]),
+                card_to_value(bytes[1]),
+                card_to_value(bytes[2]),
+                card_to_value(bytes[3]),
+                card_to_value(bytes[4]),
             ],
         })
     }
@@ -116,18 +61,18 @@ impl FromStr for CardSet {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct JokerCardSet {
-    cards: [JackJokerCard; 5],
+    cards: [u8; 5],
 }
 
 impl From<&CardSet> for JokerCardSet {
     fn from(value: &CardSet) -> Self {
         Self {
             cards: [
-                value.cards[0].into(),
-                value.cards[1].into(),
-                value.cards[2].into(),
-                value.cards[3].into(),
-                value.cards[4].into(),
+                value.cards[0] & JOKER_MASK,
+                value.cards[1] & JOKER_MASK,
+                value.cards[2] & JOKER_MASK,
+                value.cards[3] & JOKER_MASK,
+                value.cards[4] & JOKER_MASK,
             ],
         }
     }
@@ -145,8 +90,8 @@ pub enum HandKind {
 }
 
 impl HandKind {
-    pub fn kinds_for_card_counts(counts: &FxHashMap<Card, usize>) -> (Self, Self) {
-        let joker_count = counts.get(&Card::Jack).copied().unwrap_or_default();
+    pub fn kinds_for_card_counts(counts: &FxHashMap<u8, usize>) -> (Self, Self) {
+        let joker_count = counts.get(&JOKER).copied().unwrap_or_default();
 
         let len = counts.len();
 
@@ -221,7 +166,7 @@ pub struct Hand {
 impl Hand {
     pub fn new(cards: CardSet, bid: u64) -> Self {
         let joker_cards = (&cards).into();
-        let mut counts: FxHashMap<Card, usize> = FxHashMap::default();
+        let mut counts: FxHashMap<u8, usize> = FxHashMap::default();
         for c in cards.cards.iter() {
             let e = counts.entry(*c).or_default();
             *e += 1;
