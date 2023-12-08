@@ -14,10 +14,7 @@ fn parse_map(input: &str) -> IResult<&str, u128> {
         preceded(space0, complete::u8),
         // the largest number we ever see is only two digits
         || 0_u128,
-        |mut m, v| {
-            m |= 1 << v;
-            m
-        },
+        |m, v| m | (1 << v),
     )(input)
 }
 
