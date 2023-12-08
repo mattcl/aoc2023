@@ -1,6 +1,6 @@
 [package]
 name = "aoc-cli"
-version = "0.7.3"
+version = "0.8.0"
 authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
 edition = "2021"
 description = "A command line interface for executing Advent of Code solutions."
@@ -23,3 +23,4 @@ scratchcards = { path = "../day-004-scratchcards" }
 you-give-a-seed-a-fertilizer = { path = "../day-005-you-give-a-seed-a-fertilizer" }
 wait-for-it = { path = "../day-006-wait-for-it" }
 camel-cards = { path = "../day-007-camel-cards" }
+haunted-wasteland = { path = "../day-008-haunted-wasteland" }

@@ -18,6 +18,7 @@ aoc-std = { version = "0.3.5", registry = "ancalagon" }
 itertools = "0.12.0"
 nom = { version = "7.1", features = ["alloc"] }
 num = "0.4.1"
+num-prime = "0.4.3"
 rayon = "1.8.0"
 rustc-hash = "1.1.0"
 serde = { version = "1.0", features = ["derive"] }

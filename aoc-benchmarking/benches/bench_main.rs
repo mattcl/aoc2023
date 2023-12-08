@@ -4,6 +4,7 @@ use aoc_benchmarking::aoc_benches;
 use camel_cards::CamelCards;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
+use haunted_wasteland::HauntedWasteland;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -59,6 +60,13 @@ aoc_benches! {
         "../day-007-camel-cards/input.txt",
         CamelCards,
         "Combined (including parsing)"
+    ),
+    (
+        day_008,
+        "../day-008-haunted-wasteland/input.txt",
+        HauntedWasteland,
+        "Part 1",
+        "Part 2"
     ),
     // bench_marker
 }
