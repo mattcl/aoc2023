@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use aoc_plumbing::Problem;
+use aoc_std::geometry::{self, IntervalPartition};
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
@@ -11,76 +12,40 @@ use nom::{
     IResult,
 };
 
-fn parse_seeds(input: &str) -> IResult<&str, Vec<u64>> {
-    preceded(tag("seeds: "), separated_list1(space1, complete::u64))(input)
+fn parse_seeds(input: &str) -> IResult<&str, Vec<i64>> {
+    preceded(tag("seeds: "), separated_list1(space1, complete::i64))(input)
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NumRange {
-    start: u64,
-    end: u64,
-}
-
-impl NumRange {
-    pub fn contains(&self, input: u64) -> bool {
-        input >= self.start && input <= self.end
-    }
-}
+pub type Interval = geometry::Interval<i64>;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RangeMapEntry {
-    destination: NumRange,
-    source: NumRange,
+    destination: Interval,
+    source: Interval,
 }
 
 impl RangeMapEntry {
-    pub fn translate(&self, input: u64) -> Option<u64> {
-        if self.source.contains(input) {
+    pub fn translate(&self, input: i64) -> Option<i64> {
+        if self.source.contains_value(input) {
             Some(self.destination.start + input - self.source.start)
         } else {
             None
         }
     }
-
-    pub fn contains(&self, other: &NumRange) -> bool {
-        self.source.start <= other.start && other.end <= self.source.end
-    }
-
-    pub fn right_of_overlapping(&self, other: &NumRange) -> bool {
-        other.start < self.source.start
-            && self.source.start <= other.end
-            && other.end <= self.source.end
-    }
-
-    pub fn left_of_overlapping(&self, other: &NumRange) -> bool {
-        self.source.start <= other.start
-            && other.start <= self.source.end
-            && self.source.end < other.end
-    }
-
-    pub fn is_contained_by(&self, other: &NumRange) -> bool {
-        other.start < self.source.start && self.source.end < other.end
-    }
 }
 
 fn parse_range_map_entry(input: &str) -> IResult<&str, RangeMapEntry> {
     let (input, (destination_start, source_start, length)) = tuple((
-        complete::u64,
-        preceded(space0, complete::u64),
-        preceded(space0, complete::u64),
+        complete::i64,
+        preceded(space0, complete::i64),
+        preceded(space0, complete::i64),
     ))(input)?;
 
     Ok((
         input,
         RangeMapEntry {
-            destination: NumRange {
-                start: destination_start,
-                end: destination_start + length - 1,
-            },
-            source: NumRange {
-                start: source_start,
-                end: source_start + length - 1,
-            },
+            destination: Interval::new(destination_start, destination_start + length - 1),
+            source: Interval::new(source_start, source_start + length - 1),
         },
     ))
 }
@@ -88,7 +53,7 @@ fn parse_range_map_entry(input: &str) -> IResult<&str, RangeMapEntry> {
 fn parse_range_map_entries(input: &str) -> IResult<&str, Vec<RangeMapEntry>> {
     let (input, mut entries) = separated_list1(newline, parse_range_map_entry)(input)?;
 
-    entries.sort_by(|a, b| a.source.start.cmp(&b.source.start));
+    entries.sort_by(|a, b| a.source.cmp(&b.source));
 
     Ok((input, entries))
 }
@@ -99,7 +64,7 @@ pub struct RangeMap {
 }
 
 impl RangeMap {
-    pub fn translate(&self, input: u64) -> u64 {
+    pub fn translate(&self, input: i64) -> i64 {
         for e in self.entries.iter() {
             if let Some(v) = e.translate(input) {
                 return v;
@@ -135,19 +100,19 @@ fn parse_range_maps(input: &str) -> IResult<&str, Vec<RangeMap>> {
     )(input)
 }
 
-fn parse(input: &str) -> IResult<&str, (Vec<u64>, Vec<RangeMap>)> {
+fn parse(input: &str) -> IResult<&str, (Vec<i64>, Vec<RangeMap>)> {
     separated_pair(parse_seeds, multispace1, parse_range_maps)(input)
 }
 
 #[derive(Debug, Clone)]
 pub struct YouGiveASeedAFertilizer {
-    seeds: Vec<u64>,
+    seeds: Vec<i64>,
     range_maps: Vec<RangeMap>,
 }
 
 impl YouGiveASeedAFertilizer {
-    pub fn lowest_location_number(&self) -> u64 {
-        let mut lowest = u64::MAX;
+    pub fn lowest_location_number(&self) -> i64 {
+        let mut lowest = i64::MAX;
         for seed in self.seeds.iter().copied() {
             let soil = self.range_maps[0].translate(seed);
             let fertilizer = self.range_maps[1].translate(soil);
@@ -164,15 +129,12 @@ impl YouGiveASeedAFertilizer {
         lowest
     }
 
-    pub fn lowest_location_number_range(&self) -> u64 {
+    pub fn lowest_location_number_range(&self) -> i64 {
         let mut ranges = self
             .seeds
             .iter()
             .tuples()
-            .map(|(start, len)| NumRange {
-                start: *start,
-                end: *start + *len - 1,
-            })
+            .map(|(start, len)| Interval::new(*start, *start + *len -1))
             .collect::<Vec<_>>();
 
         for map in self.range_maps.iter() {
@@ -180,51 +142,28 @@ impl YouGiveASeedAFertilizer {
 
             'splitter: while let Some(range) = ranges.pop() {
                 for entry in map.entries.iter() {
-                    if entry.contains(&range) {
-                        // our range is contained entirely by the entry range
-                        next_ranges.push(NumRange {
-                            start: range.start + entry.destination.start - entry.source.start,
-                            end: range.end + entry.destination.start - entry.source.start,
-                        });
-                        continue 'splitter;
-                    } else if entry.right_of_overlapping(&range) {
-                        // the entry is to our right and we overlap it
-                        next_ranges.push(NumRange {
-                            start: range.start,
-                            end: entry.source.start - 1,
-                        });
-                        next_ranges.push(NumRange {
-                            start: entry.destination.start,
-                            end: range.end + entry.destination.start - entry.source.start,
-                        });
-                        continue 'splitter;
-                    } else if entry.left_of_overlapping(&range) {
-                        // the entry is to our left and we overlap it
-                        next_ranges.push(NumRange {
-                            start: range.start + entry.destination.start - entry.source.start,
-                            end: entry.source.end + entry.destination.start - entry.source.start,
-                        });
-                        ranges.push(NumRange {
-                            start: entry.source.end + 1,
-                            end: range.end,
-                        });
-                        continue 'splitter;
-                    } else if entry.is_contained_by(&range) {
-                        // our range entirely contains the entry and extends
-                        // beyond it on either side
-                        next_ranges.push(NumRange {
-                            start: range.start,
-                            end: entry.source.start - 1,
-                        });
-                        next_ranges.push(NumRange {
-                            start: entry.destination.start,
-                            end: entry.destination.end,
-                        });
-                        ranges.push(NumRange {
-                            start: entry.source.end + 1,
-                            end: range.end,
-                        });
-                        continue 'splitter;
+                    match range.partition_by(&entry.source) {
+                        IntervalPartition::EntirelyContained { overlap } => {
+                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            continue 'splitter;
+                        },
+                        IntervalPartition::RemainderLeft { left, overlap } => {
+                            next_ranges.push(left);
+                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            continue 'splitter;
+                        },
+                        IntervalPartition::RemainderRight { overlap, right } => {
+                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            ranges.push(right);
+                            continue 'splitter;
+                        },
+                        IntervalPartition::Bisecting { left, overlap, right } => {
+                            next_ranges.push(left);
+                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            ranges.push(right);
+                            continue 'splitter;
+                        },
+                        _ => { /* nothing */ }
                     }
                 }
                 // if we're here it means we didn't find _any_ overlaps, so we
@@ -255,8 +194,8 @@ impl Problem for YouGiveASeedAFertilizer {
     const README: &'static str = include_str!("../README.md");
 
     type ProblemError = anyhow::Error;
-    type P1 = u64;
-    type P2 = u64;
+    type P1 = i64;
+    type P2 = i64;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
         Ok(self.lowest_location_number())
