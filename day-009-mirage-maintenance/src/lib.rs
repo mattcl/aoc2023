@@ -36,13 +36,13 @@ impl FromStr for MirageMaintenance {
         for seq in sequences {
             let row = seq.len();
 
-            for (col, v) in seq.iter().enumerate() {
-                let v = *v as i64;
+            for (col, v) in seq.into_iter().enumerate() {
+                let v = v as i64;
 
-                if ((row + 1) - col) % 2 == 0 {
-                    right += triangle[row][col] * v;
-                } else {
+                if (row - col) % 2 == 0 {
                     right -= triangle[row][col] * v;
+                } else {
+                    right += triangle[row][col] * v;
                 }
 
                 if col % 2 == 0 {
