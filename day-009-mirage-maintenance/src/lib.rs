@@ -4,16 +4,13 @@ use aoc_plumbing::Problem;
 use aoc_std::geometry::Point2D;
 use itertools::Itertools;
 use nom::{
-    character::complete::{self, newline, space1},
+    character::complete::{self, newline},
     multi::separated_list1,
     IResult,
 };
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Sequence(Vec<i32>);
-
 fn parse_sequence(input: &str) -> IResult<&str, Vec<i32>> {
-    separated_list1(space1, complete::i32)(input)
+    separated_list1(complete::char(' '), complete::i32)(input)
 }
 
 fn parse_sequences(input: &str) -> IResult<&str, Vec<Vec<i32>>> {
@@ -48,10 +45,7 @@ pub fn extrapolate_sequence(sequence: &[i32]) -> Point2D<i64> {
 }
 
 pub fn extrapolate_all(sequences: &[Vec<i32>]) -> Point2D<i64> {
-    sequences
-        .iter()
-        .map(|s| extrapolate_sequence(s))
-        .sum()
+    sequences.iter().map(|s| extrapolate_sequence(s)).sum()
 }
 
 #[derive(Debug, Clone)]

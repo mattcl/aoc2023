@@ -6,14 +6,17 @@ use aoc_std::geometry::{self, IntervalPartition};
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
-    character::complete::{self, alpha1, multispace0, multispace1, newline, space0, space1},
+    character::complete::{self, alpha1, multispace0, multispace1, newline},
     multi::{fold_many1, separated_list1},
     sequence::{preceded, separated_pair, tuple},
     IResult,
 };
 
 fn parse_seeds(input: &str) -> IResult<&str, Vec<i64>> {
-    preceded(tag("seeds: "), separated_list1(space1, complete::i64))(input)
+    preceded(
+        tag("seeds: "),
+        separated_list1(complete::char(' '), complete::i64),
+    )(input)
 }
 
 pub type Interval = geometry::Interval<i64>;
@@ -37,8 +40,8 @@ impl RangeMapEntry {
 fn parse_range_map_entry(input: &str) -> IResult<&str, RangeMapEntry> {
     let (input, (destination_start, source_start, length)) = tuple((
         complete::i64,
-        preceded(space0, complete::i64),
-        preceded(space0, complete::i64),
+        preceded(complete::char(' '), complete::i64),
+        preceded(complete::char(' '), complete::i64),
     ))(input)?;
 
     Ok((

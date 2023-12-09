@@ -3,8 +3,7 @@ use std::str::FromStr;
 use anyhow::bail;
 use aoc_plumbing::Problem;
 use nom::{
-    bytes::complete::tag,
-    character::complete::{self, alphanumeric1, multispace1},
+    character::complete::{self, alphanumeric1, newline},
     combinator::{self, map_res},
     multi::separated_list1,
     sequence::separated_pair,
@@ -198,7 +197,7 @@ fn parse_hand(input: &str) -> IResult<&str, Hand> {
     combinator::map(
         separated_pair(
             map_res(alphanumeric1, CardSet::from_str),
-            tag(" "),
+            complete::char(' '),
             complete::u64,
         ),
         |(cards, bid)| Hand::new(cards, bid),
@@ -206,7 +205,7 @@ fn parse_hand(input: &str) -> IResult<&str, Hand> {
 }
 
 fn parse_hands(input: &str) -> IResult<&str, Vec<Hand>> {
-    let (input, mut hands) = separated_list1(multispace1, parse_hand)(input)?;
+    let (input, mut hands) = separated_list1(newline, parse_hand)(input)?;
 
     hands.sort();
 
