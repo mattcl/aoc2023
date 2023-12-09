@@ -134,7 +134,7 @@ impl YouGiveASeedAFertilizer {
             .seeds
             .iter()
             .tuples()
-            .map(|(start, len)| Interval::new(*start, *start + *len -1))
+            .map(|(start, len)| Interval::new(*start, *start + *len - 1))
             .collect::<Vec<_>>();
 
         for map in self.range_maps.iter() {
@@ -144,25 +144,37 @@ impl YouGiveASeedAFertilizer {
                 for entry in map.entries.iter() {
                     match range.partition_by(&entry.source) {
                         IntervalPartition::EntirelyContained { overlap } => {
-                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            next_ranges.push(
+                                overlap.translate(entry.destination.start - entry.source.start),
+                            );
                             continue 'splitter;
-                        },
+                        }
                         IntervalPartition::RemainderLeft { left, overlap } => {
                             next_ranges.push(left);
-                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            next_ranges.push(
+                                overlap.translate(entry.destination.start - entry.source.start),
+                            );
                             continue 'splitter;
-                        },
+                        }
                         IntervalPartition::RemainderRight { overlap, right } => {
-                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            next_ranges.push(
+                                overlap.translate(entry.destination.start - entry.source.start),
+                            );
                             ranges.push(right);
                             continue 'splitter;
-                        },
-                        IntervalPartition::Bisecting { left, overlap, right } => {
+                        }
+                        IntervalPartition::Bisecting {
+                            left,
+                            overlap,
+                            right,
+                        } => {
                             next_ranges.push(left);
-                            next_ranges.push(overlap.translate(entry.destination.start - entry.source.start));
+                            next_ranges.push(
+                                overlap.translate(entry.destination.start - entry.source.start),
+                            );
                             ranges.push(right);
                             continue 'splitter;
-                        },
+                        }
                         _ => { /* nothing */ }
                     }
                 }

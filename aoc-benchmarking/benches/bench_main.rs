@@ -5,6 +5,7 @@ use camel_cards::CamelCards;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
+use mirage_maintenance::MirageMaintenance;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -67,6 +68,12 @@ aoc_benches! {
         HauntedWasteland,
         "Part 1",
         "Part 2"
+    ),
+    (
+        day_009,
+        "../day-009-mirage-maintenance/input.txt",
+        MirageMaintenance,
+        "Combined (including parsing)"
     ),
     // bench_marker
 }
