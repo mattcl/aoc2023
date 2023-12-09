@@ -156,9 +156,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-geometry"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "1bddeba495f8297c5610ba8f134d3b503622b1a7c332de88a182fa0533c698be"
+checksum = "3db9d71d0735a9c98c0a1a6aecd5f4f9c25f6524788b8dbec47f4d4ccd17b16a"
 dependencies = [
  "aoc-directions",
  "num",
@@ -189,9 +189,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-std"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "cc2a56ae891859d5cb2378db3226d0eb06a5acf454c8df739d05d922f9c75317"
+checksum = "2ced3c3eaf3accc07fcb2baf089710869bec0bc1606221623754b766c8fda3dd"
 dependencies = [
  "aoc-collections",
  "aoc-conversions",
@@ -591,9 +591,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
+checksum = "b1a46d1a171d865aa5f83f92695765caa047a9b4cbae2cbf37dbd613a793fd4c"
 
 [[package]]
 name = "js-sys"

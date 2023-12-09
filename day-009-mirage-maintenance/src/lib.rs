@@ -51,8 +51,7 @@ pub fn extrapolate_all(sequences: &[Vec<i32>]) -> Point2D<i64> {
     sequences
         .iter()
         .map(|s| extrapolate_sequence(s))
-        .reduce(|acc, v| acc + v)
-        .unwrap_or_default()
+        .sum()
 }
 
 #[derive(Debug, Clone)]
