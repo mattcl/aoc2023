@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
 use aoc_plumbing::Problem;
-use aoc_std::geometry::Point2D;
-use itertools::Itertools;
+use aoc_std::geometry::PascalsTriangle;
 use nom::{
     character::complete::{self, newline},
     multi::separated_list1,
@@ -17,37 +16,6 @@ fn parse_sequences(input: &str) -> IResult<&str, Vec<Vec<i32>>> {
     separated_list1(newline, parse_sequence)(input)
 }
 
-pub fn process(sequence: &[i32]) -> Vec<i32> {
-    sequence
-        .iter()
-        .tuple_windows()
-        .map(|(a, b)| b - a)
-        .collect()
-}
-
-pub fn extrapolate(sequence: &[i32], diffs: Point2D<i64>) -> Point2D<i64> {
-    (
-        sequence[0] as i64 - diffs.x,
-        sequence[sequence.len() - 1] as i64 + diffs.y,
-    )
-        .into()
-}
-
-pub fn extrapolate_sequence(sequence: &[i32]) -> Point2D<i64> {
-    let new = process(sequence);
-
-    if new.iter().all(|v| *v == 0) {
-        extrapolate(sequence, Point2D::default())
-    } else {
-        let e = extrapolate_sequence(&new);
-        extrapolate(sequence, e)
-    }
-}
-
-pub fn extrapolate_all(sequences: &[Vec<i32>]) -> Point2D<i64> {
-    sequences.iter().map(|s| extrapolate_sequence(s)).sum()
-}
-
 #[derive(Debug, Clone)]
 pub struct MirageMaintenance {
     right: i64,
@@ -59,12 +27,35 @@ impl FromStr for MirageMaintenance {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (_, sequences) = parse_sequences(s).map_err(|e| e.to_owned())?;
+        let max_len = sequences.iter().map(|s| s.len()).max().unwrap_or_default();
+        let triangle: PascalsTriangle<i64> = PascalsTriangle::new(max_len + 1);
 
-        let ans = extrapolate_all(&sequences);
+        let mut right = 0;
+        let mut left = 0;
+
+        for seq in sequences {
+            let row = seq.len();
+
+            for (col, v) in seq.iter().enumerate() {
+                let v = *v as i64;
+
+                if ((row + 1) - col) % 2 == 0 {
+                    right += triangle[row][col] * v;
+                } else {
+                    right -= triangle[row][col] * v;
+                }
+
+                if col % 2 == 0 {
+                    left += triangle[row][col + 1] * v;
+                } else {
+                    left -= triangle[row][col + 1] * v;
+                }
+            }
+        }
 
         Ok(Self {
-            left: ans.x,
-            right: ans.y,
+            left,
+            right,
         })
     }
 }

@@ -101,7 +101,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -122,9 +122,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-collections"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "d730e223ea804843b5196fff892de7c6beeba5b942573dc0aec9853f6d8316d8"
+checksum = "aa409819aef2c71052e0fd00aa937043442c2f6cd3bd7048f2adb1e19183fa22"
 dependencies = [
  "aoc-conversions",
  "aoc-directions",
@@ -156,9 +156,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-geometry"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "3db9d71d0735a9c98c0a1a6aecd5f4f9c25f6524788b8dbec47f4d4ccd17b16a"
+checksum = "b2dd3e2765ab4757d2e69072b78e7024bdec387c3c9cbfb91d062c2d10de2e53"
 dependencies = [
  "aoc-directions",
  "num",
@@ -169,9 +169,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-pathing"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "9791c2709461efb90fe3630d54c27e991f93acad39acd7fefa19324a92e22612"
+checksum = "63084bfdcecdb5a62246ece8b88ec8224cd909888d004dd80291118819b30cda"
 dependencies = [
  "aoc-collections",
  "num",
@@ -189,9 +189,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-std"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "2ced3c3eaf3accc07fcb2baf089710869bec0bc1606221623754b766c8fda3dd"
+checksum = "e0c0db587f4287bd46e3ffadb6a6342b57da4e2dab317ce72d85fe9be3dcd80a"
 dependencies = [
  "aoc-collections",
  "aoc-conversions",
