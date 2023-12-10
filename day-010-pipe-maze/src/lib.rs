@@ -19,6 +19,7 @@ pub enum Tile {
     SE90,
     Ground,
     Start,
+    MainLoop,
 }
 
 impl TryFrom<char> for Tile {
@@ -129,36 +130,44 @@ impl Actor {
     // to inspect to the right of us
     pub fn right_locs(
         &self,
-        out: &mut FxHashSet<Location>,
+        out: &mut Vec<Location>,
         seen: &FxHashSet<Location>,
         maze: &Grid<Tile>,
     ) {
         match (self.facing, self.cur_tile) {
             (Cardinal::North, Tile::NW90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::South) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
             (Cardinal::South, Tile::SE90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::North) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
             (Cardinal::East, Tile::NE90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::West) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
             (Cardinal::West, Tile::SW90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::East) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
@@ -172,9 +181,11 @@ impl Actor {
         }
 
         let right_dir = self.facing.right();
-        if let Some(right) = self.location.cardinal_neighbor(right_dir) {
-            if maze.get(&right).is_some() && !seen.contains(&right) {
-                out.insert(right);
+        if let Some(loc) = self.location.cardinal_neighbor(right_dir) {
+            if let Some(t) = maze.get(&loc) {
+                if *t != Tile::MainLoop && !seen.contains(&loc) {
+                    out.push(loc);
+                }
             }
         }
     }
@@ -183,36 +194,44 @@ impl Actor {
     // to inspect to the left of us
     pub fn left_locs(
         &self,
-        out: &mut FxHashSet<Location>,
+        out: &mut Vec<Location>,
         seen: &FxHashSet<Location>,
         maze: &Grid<Tile>,
     ) {
         match (self.facing, self.cur_tile) {
             (Cardinal::North, Tile::NE90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::South) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
             (Cardinal::South, Tile::SW90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::North) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
             (Cardinal::East, Tile::SE90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::West) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
             (Cardinal::West, Tile::NW90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::East) {
-                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
-                        out.insert(loc);
+                    if let Some(t) = maze.get(&loc) {
+                        if *t != Tile::MainLoop && !seen.contains(&loc) {
+                            out.push(loc);
+                        }
                     }
                 }
             }
@@ -226,9 +245,11 @@ impl Actor {
         }
 
         let left_dir = self.facing.left();
-        if let Some(left) = self.location.cardinal_neighbor(left_dir) {
-            if maze.get(&left).is_some() && !seen.contains(&left) {
-                out.insert(left);
+        if let Some(loc) = self.location.cardinal_neighbor(left_dir) {
+            if let Some(t) = maze.get(&loc) {
+                if *t != Tile::MainLoop && !seen.contains(&loc) {
+                    out.push(loc);
+                }
             }
         }
     }
@@ -244,9 +265,6 @@ pub struct PipeMaze {
 
 impl PipeMaze {
     pub fn process_loop(&mut self) {
-        let mut actor_seen: FxHashSet<Location> = FxHashSet::default();
-        actor_seen.insert(self.start);
-
         // get the two starting positions
         let actors = self
             .maze
@@ -277,13 +295,12 @@ impl PipeMaze {
 
         let mut actor_one = actors[0];
         let mut actor_snapshots = vec![actor_one];
-
-        actor_seen.insert(actor_one.location);
+        let _ = self.maze.set(&actor_one.location, Tile::MainLoop);
 
         loop {
             self.steps += 1;
             actor_one.advance(&self.maze);
-            actor_seen.insert(actor_one.location);
+            let _ = self.maze.set(&actor_one.location, Tile::MainLoop);
             actor_snapshots.push(actor_one);
 
             if actor_one.location == self.start {
@@ -291,10 +308,9 @@ impl PipeMaze {
             }
         }
 
-        let loop_len = actor_seen.len();
-
-        let mut cur_locations = FxHashSet::default();
-        let mut next_locations = FxHashSet::default();
+        let mut actor_seen: FxHashSet<Location> = FxHashSet::default();
+        let mut cur_locations = Vec::default();
+        let mut next_locations = Vec::default();
 
         // if we just had more right turns than left turns, it means the loop
         // contains things to our right
@@ -322,21 +338,26 @@ impl PipeMaze {
         // this actually always will evenly divide
         self.steps /= 2;
 
-        self.num_inside = actor_seen.len() - loop_len;
+        self.num_inside = actor_seen.len();
     }
 
     pub fn flood(
         &self,
-        cur: &mut FxHashSet<Location>,
-        next: &mut FxHashSet<Location>,
+        cur: &mut Vec<Location>,
+        next: &mut Vec<Location>,
         seen: &mut FxHashSet<Location>,
     ) {
-        for loc in cur.drain() {
+        for loc in cur.drain(..) {
+            if seen.contains(&loc) {
+                continue;
+            }
             seen.insert(loc);
             next.extend(
                 self.maze
                     .cardinal_neighbors(&loc)
-                    .filter_map(|(_, next_loc, _)| (!seen.contains(&next_loc)).then_some(next_loc)),
+                    .filter_map(|(_, next_loc, t)| {
+                        (*t != Tile::MainLoop && !seen.contains(&next_loc)).then_some(next_loc)
+                    }),
             );
         }
 
