@@ -125,38 +125,58 @@ impl Actor {
         }
     }
 
-    pub fn right_locs(&self) -> Vec<Location> {
-        let mut out = Vec::default();
-        let right_dir = self.facing.right();
-        if let Some(right) = self.location.cardinal_neighbor(right_dir) {
-            out.push(right);
-        }
-
+    // because of the way we move there could be one or two locations we need
+    // to inspect to the right of us
+    pub fn right_locs(
+        &self,
+        out: &mut Vec<Location>,
+        seen: &FxHashSet<Location>,
+        maze: &Grid<Tile>,
+    ) {
         match (self.facing, self.cur_tile) {
             (Cardinal::North, Tile::NW90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::South) {
-                    out.push(loc);
+                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
+                        out.push(loc);
+                    }
                 }
             }
             (Cardinal::South, Tile::SE90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::North) {
-                    out.push(loc);
+                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
+                        out.push(loc);
+                    }
                 }
             }
             (Cardinal::East, Tile::NE90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::West) {
-                    out.push(loc);
+                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
+                        out.push(loc);
+                    }
                 }
             }
             (Cardinal::West, Tile::SW90) => {
                 if let Some(loc) = self.location.cardinal_neighbor(Cardinal::East) {
-                    out.push(loc);
+                    if maze.get(&loc).is_some() && !seen.contains(&loc) {
+                        out.push(loc);
+                    }
                 }
             }
-            _ => {}
+            (Cardinal::North, Tile::NE90)
+            | (Cardinal::East, Tile::SE90)
+            | (Cardinal::West, Tile::NW90)
+            | (Cardinal::South, Tile::SW90) => {
+                return;
+            }
+            _ => { /* do nothing */ }
         }
 
-        out
+        let right_dir = self.facing.right();
+        if let Some(right) = self.location.cardinal_neighbor(right_dir) {
+            if maze.get(&right).is_some() && !seen.contains(&right) {
+                out.push(right);
+            }
+        }
     }
 }
 
@@ -173,6 +193,7 @@ impl PipeMaze {
         let mut actor_seen: FxHashSet<Location> = FxHashSet::default();
         actor_seen.insert(self.start);
 
+        // get the two starting positions
         let actors = self
             .maze
             .cardinal_neighbors(&self.start)
@@ -226,18 +247,15 @@ impl PipeMaze {
             actors[1]
         };
 
-        let mut working = FxHashSet::default();
+        let mut right_locations = Vec::default();
+        let mut next_locations = Vec::default();
 
         loop {
-            for loc in actor.right_locs() {
-                if !actor_seen.contains(&loc) && self.maze.get(&loc).is_some() {
-                    working.insert(loc);
-                }
-            }
+            actor.right_locs(&mut right_locations, &actor_seen, &self.maze);
 
-            if !working.is_empty() {
-                self.flood(&working, &mut actor_seen);
-                working.clear()
+            if !right_locations.is_empty() {
+                self.flood(&mut right_locations, &mut next_locations, &mut actor_seen);
+                right_locations.clear()
             }
 
             if actor.location == self.start {
@@ -253,23 +271,28 @@ impl PipeMaze {
         self.num_inside = actor_seen.len() - loop_len;
     }
 
-    pub fn flood(&self, cur: &FxHashSet<Location>, seen: &mut FxHashSet<Location>) {
-        let mut next = FxHashSet::default();
-        for loc in cur.iter() {
-            if seen.contains(loc) {
+    pub fn flood(
+        &self,
+        cur: &mut Vec<Location>,
+        next: &mut Vec<Location>,
+        seen: &mut FxHashSet<Location>,
+    ) {
+        for loc in cur.drain(..) {
+            if seen.contains(&loc) {
                 continue;
             }
-            seen.insert(*loc);
+            seen.insert(loc);
             next.extend(
                 self.maze
-                    .cardinal_neighbors(loc)
+                    .cardinal_neighbors(&loc)
                     .filter(|(_, next_loc, _)| !seen.contains(next_loc))
                     .map(|(_, next_loc, _)| next_loc),
             );
         }
 
-        if !next.is_empty() {
-            self.flood(&next, seen);
+        std::mem::swap(cur, next);
+        if !cur.is_empty() {
+            self.flood(cur, next, seen);
         }
     }
 }
