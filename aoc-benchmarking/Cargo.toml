@@ -22,3 +22,4 @@ wait-for-it = { path = "../day-006-wait-for-it" }
 camel-cards = { path = "../day-007-camel-cards" }
 haunted-wasteland = { path = "../day-008-haunted-wasteland" }
 mirage-maintenance = { path = "../day-009-mirage-maintenance" }
+pipe-maze = { path = "../day-010-pipe-maze" }

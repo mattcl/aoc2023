@@ -6,6 +6,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use mirage_maintenance::MirageMaintenance;
+use pipe_maze::PipeMaze;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -73,6 +74,12 @@ aoc_benches! {
         day_009,
         "../day-009-mirage-maintenance/input.txt",
         MirageMaintenance,
+        "Combined (including parsing)"
+    ),
+    (
+        day_010,
+        "../day-010-pipe-maze/input.txt",
+        PipeMaze,
         "Combined (including parsing)"
     ),
     // bench_marker

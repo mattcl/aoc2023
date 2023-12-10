@@ -93,6 +93,7 @@ dependencies = [
  "gear-ratios",
  "haunted-wasteland",
  "mirage-maintenance",
+ "pipe-maze",
  "scratchcards",
  "trebuchet",
  "wait-for-it",
@@ -101,7 +102,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.9.3"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -112,6 +113,7 @@ dependencies = [
  "gear-ratios",
  "haunted-wasteland",
  "mirage-maintenance",
+ "pipe-maze",
  "scratchcards",
  "serde",
  "serde_json",
@@ -791,6 +793,18 @@ name = "oorandom"
 version = "11.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
+
+[[package]]
+name = "pipe-maze"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "nom",
+ "rustc-hash",
+ "serde",
+]
 
 [[package]]
 name = "plotters"

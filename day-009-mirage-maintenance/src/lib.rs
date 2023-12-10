@@ -53,10 +53,7 @@ impl FromStr for MirageMaintenance {
             }
         }
 
-        Ok(Self {
-            left,
-            right,
-        })
+        Ok(Self { left, right })
     }
 }
 

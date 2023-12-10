@@ -12,6 +12,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use mirage_maintenance::MirageMaintenance;
+use pipe_maze::PipeMaze;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -182,5 +183,6 @@ generate_cli! {
     (CamelCards, 7),
     (HauntedWasteland, 8),
     (MirageMaintenance, 9),
+    (PipeMaze, 10),
     // command_marker
 }
