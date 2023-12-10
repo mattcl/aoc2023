@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use anyhow::bail;
 use aoc_plumbing::Problem;
 use aoc_std::{
     collections::Grid,
@@ -22,11 +21,9 @@ pub enum Tile {
     MainLoop,
 }
 
-impl TryFrom<char> for Tile {
-    type Error = anyhow::Error;
-
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        Ok(match value {
+impl From<char> for Tile {
+    fn from(value: char) -> Self {
+        match value {
             '|' => Self::Vertical,
             '-' => Self::Horizontal,
             'L' => Self::NE90,
@@ -35,8 +32,8 @@ impl TryFrom<char> for Tile {
             'F' => Self::SE90,
             '.' => Self::Ground,
             'S' => Self::Start,
-            _ => bail!("Invalid tile: {}", value),
-        })
+            _ => unreachable!("Invalid input {}", value),
+        }
     }
 }
 
@@ -382,16 +379,15 @@ impl FromStr for PipeMaze {
                 line.chars()
                     .enumerate()
                     .map(|(col, ch)| {
-                        Tile::try_from(ch).map(|t| {
-                            if t == Tile::Start {
-                                start = Location::new(row, col);
-                            }
-                            t
-                        })
+                        let t = Tile::from(ch);
+                        if t == Tile::Start {
+                            start = Location::new(row, col);
+                        }
+                        t
                     })
-                    .collect::<Result<Vec<_>, _>>()
+                    .collect::<Vec<_>>()
             })
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Vec<_>>();
         let maze = Grid::new(tiles);
 
         let mut s = Self {
