@@ -34,11 +34,10 @@ impl FromStr for CosmicExpansion {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut galaxies = Vec::default();
 
-        let mut empty_rows: Vec<i64> = Vec::default();
-        let mut seen_col: FxHashSet<i64> = FxHashSet::default();
-
         let lines = s.trim().lines().collect::<Vec<_>>();
         let width = lines[0].len() as i64;
+
+        let mut num_empty_rows = 0_i64;
 
         let mut empty_cols_raw = FxHashSet::from_iter(0..width);
 
@@ -47,41 +46,38 @@ impl FromStr for CosmicExpansion {
             for (col, ch) in line.chars().enumerate() {
                 if ch == '#' {
                     seen_row = true;
-                    seen_col.insert(col as i64);
-                    galaxies.push(Galaxy::new(Point2D::new(col as i64, row as i64)));
+                    let mut galaxy = Galaxy::new(Point2D::new(col as i64, row as i64));
+                    galaxy.one.y += num_empty_rows;
+                    galaxy.one_million.y += num_empty_rows * 999999;
+                    galaxies.push(galaxy);
                     empty_cols_raw.remove(&(col as i64));
                 }
             }
 
             if !seen_row {
-                empty_rows.push(row as i64);
+                num_empty_rows += 1;
             }
         }
 
-        let empty_cols = empty_cols_raw.into_iter().sorted().collect::<Vec<_>>();
+        let mut empty_cols = empty_cols_raw.into_iter().sorted().collect::<Vec<_>>();
+        empty_cols.push(width);
 
-        for g in galaxies.iter_mut() {
-            for (col_idx, col) in empty_cols.iter().enumerate().rev() {
-                if g.original.x > *col {
-                    let multiple = (col_idx + 1) as i64;
-                    g.one.x += multiple;
-                    g.one_million.x += 999_999 * multiple;
-                    break;
-                }
+        let mut counts = vec![0_i64; width as usize];
+
+        for ((_, col1), (idx2, col2)) in empty_cols.iter().enumerate().tuple_windows() {
+            for j in *col1..*col2 {
+                counts[j as usize] = idx2 as i64;
             }
         }
 
         for g in galaxies.iter_mut() {
-            for (row_idx, row) in empty_rows.iter().enumerate().rev() {
-                if g.original.y > *row {
-                    let multiple = (row_idx + 1) as i64;
-                    g.one.y += multiple;
-                    g.one_million.y += 999_999 * multiple;
-                    break;
-                }
-            }
+            let multiple = counts[g.original.x as usize];
+            g.one.x += multiple;
+            g.one_million.x += 999_999 * multiple;
         }
 
+        // we're 13 microseconds up to this point, and then the ~85k
+        // combinations add another 100 or so microseconds.
         let Point2D {
             x: single_expansion,
             y: million_expansion,
