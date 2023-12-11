@@ -62,39 +62,51 @@ impl Actor {
                 self.location = next_loc;
                 self.cur_tile = *tile;
 
-                match (self.facing, tile) {
-                    (Cardinal::North, Tile::SW90) => {
-                        self.facing = Cardinal::West;
-                        self.num_left += 1;
-                    }
-                    (Cardinal::North, Tile::SE90) => {
-                        self.facing = Cardinal::East;
-                        self.num_right += 1;
-                    }
-                    (Cardinal::South, Tile::NE90) => {
-                        self.facing = Cardinal::East;
-                        self.num_left += 1;
-                    }
-                    (Cardinal::South, Tile::NW90) => {
-                        self.facing = Cardinal::West;
-                        self.num_right += 1;
-                    }
-                    (Cardinal::East, Tile::SW90) => {
-                        self.facing = Cardinal::South;
-                        self.num_right += 1;
-                    }
-                    (Cardinal::East, Tile::NW90) => {
-                        self.facing = Cardinal::North;
-                        self.num_left += 1;
-                    }
-                    (Cardinal::West, Tile::SE90) => {
-                        self.facing = Cardinal::South;
-                        self.num_left += 1;
-                    }
-                    (Cardinal::West, Tile::NE90) => {
-                        self.facing = Cardinal::North;
-                        self.num_right += 1;
-                    }
+                match tile {
+                    Tile::SW90 => match self.facing {
+                        Cardinal::North => {
+                            self.facing = Cardinal::West;
+                            self.num_left += 1;
+                        }
+                        Cardinal::East => {
+                            self.facing = Cardinal::South;
+                            self.num_right += 1;
+                        }
+                        _ => {}
+                    },
+                    Tile::SE90 => match self.facing {
+                        Cardinal::North => {
+                            self.facing = Cardinal::East;
+                            self.num_right += 1;
+                        }
+                        Cardinal::West => {
+                            self.facing = Cardinal::South;
+                            self.num_left += 1;
+                        }
+                        _ => {}
+                    },
+                    Tile::NE90 => match self.facing {
+                        Cardinal::South => {
+                            self.facing = Cardinal::East;
+                            self.num_left += 1;
+                        }
+                        Cardinal::West => {
+                            self.facing = Cardinal::North;
+                            self.num_right += 1;
+                        }
+                        _ => {}
+                    },
+                    Tile::NW90 => match self.facing {
+                        Cardinal::South => {
+                            self.facing = Cardinal::West;
+                            self.num_right += 1;
+                        }
+                        Cardinal::East => {
+                            self.facing = Cardinal::North;
+                            self.num_left += 1;
+                        }
+                        _ => {}
+                    },
                     _ => {}
                 }
             }
@@ -231,10 +243,10 @@ pub struct PipeMaze {
 impl PipeMaze {
     pub fn process_loop(&mut self) {
         // get the two starting positions
-        let actors = self
+        let mut actor_one = self
             .maze
             .cardinal_neighbors(&self.start)
-            .filter_map(|(dir, loc, tile)| {
+            .find_map(|(dir, loc, tile)| {
                 // we need to find the two that connect to us
                 match (dir, tile) {
                     (Cardinal::North, Tile::Vertical) | (Cardinal::South, Tile::Vertical) => {
@@ -254,23 +266,16 @@ impl PipeMaze {
                     _ => None,
                 }
             })
-            .collect::<Vec<_>>();
+            .expect("Invalid input starting location connections");
 
-        assert_eq!(actors.len(), 2);
-
-        let mut actor_one = actors[0];
         let mut actor_snapshots = vec![actor_one];
         let _ = self.maze.set(&actor_one.location, Tile::Processed);
 
-        loop {
+        while actor_one.location != self.start {
             self.steps += 1;
             actor_one.advance(&self.maze);
             let _ = self.maze.set(&actor_one.location, Tile::Processed);
             actor_snapshots.push(actor_one);
-
-            if actor_one.location == self.start {
-                break;
-            }
         }
 
         let mut cur_locations = Vec::default();

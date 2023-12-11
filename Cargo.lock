@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.11.2"
+version = "0.11.3"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
