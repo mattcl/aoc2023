@@ -37,18 +37,19 @@ impl FromStr for CosmicExpansion {
         let mut empty_rows: Vec<i64> = Vec::default();
         let mut seen_col: FxHashSet<i64> = FxHashSet::default();
 
-        let mut largest_col = 0;
+        let lines = s.trim().lines().collect::<Vec<_>>();
+        let width = lines[0].len() as i64;
 
-        for (row, line) in s.trim().lines().enumerate() {
+        let mut empty_cols_raw = FxHashSet::from_iter(0..width);
+
+        for (row, line) in lines.into_iter().enumerate() {
             let mut seen_row = false;
             for (col, ch) in line.chars().enumerate() {
                 if ch == '#' {
                     seen_row = true;
                     seen_col.insert(col as i64);
                     galaxies.push(Galaxy::new(Point2D::new(col as i64, row as i64)));
-                    if col as i64 > largest_col {
-                        largest_col = col as i64;
-                    }
+                    empty_cols_raw.remove(&(col as i64));
                 }
             }
 
@@ -57,14 +58,15 @@ impl FromStr for CosmicExpansion {
             }
         }
 
-        for col in (0..largest_col).rev() {
-            if !seen_col.contains(&col) {
-                // we need to shift all galaxies beyond this row down
-                for g in galaxies.iter_mut() {
-                    if g.original.x > col {
-                        g.one.x += 1;
-                        g.one_million.x += 999_999;
-                    }
+        let empty_cols = empty_cols_raw.into_iter().sorted().collect::<Vec<_>>();
+
+        for g in galaxies.iter_mut() {
+            for (col_idx, col) in empty_cols.iter().enumerate().rev() {
+                if g.original.x > *col {
+                    let multiple = (col_idx + 1) as i64;
+                    g.one.x += multiple;
+                    g.one_million.x += 999_999 * multiple;
+                    break;
                 }
             }
         }
