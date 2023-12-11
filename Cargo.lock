@@ -88,6 +88,7 @@ version = "0.1.0"
 dependencies = [
  "aoc-plumbing",
  "camel-cards",
+ "cosmic-expansion",
  "criterion",
  "cube-conundrum",
  "gear-ratios",
@@ -102,13 +103,14 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
  "camel-cards",
  "clap",
  "clap_complete",
+ "cosmic-expansion",
  "cube-conundrum",
  "gear-ratios",
  "haunted-wasteland",
@@ -361,6 +363,19 @@ name = "colorchoice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
+
+[[package]]
+name = "cosmic-expansion"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rustc-hash",
+ "serde",
+]
 
 [[package]]
 name = "criterion"

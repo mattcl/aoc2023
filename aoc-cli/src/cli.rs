@@ -8,6 +8,7 @@ use aoc_plumbing::Problem;
 use camel_cards::CamelCards;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, shells::Zsh};
+use cosmic_expansion::CosmicExpansion;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
@@ -184,5 +185,6 @@ generate_cli! {
     (HauntedWasteland, 8),
     (MirageMaintenance, 9),
     (PipeMaze, 10),
+    (CosmicExpansion, 11),
     // command_marker
 }
