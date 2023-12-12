@@ -1,9 +1,9 @@
-use std::str::FromStr;
+use std::{str::FromStr, fmt::Display};
 
 use aoc_plumbing::Problem;
 use aoc_std::{
     collections::Grid,
-    directions::{BoundedCardinalNeighbors, Cardinal},
+    directions::{BoundedCardinalNeighbors, Cardinal, Direction},
     geometry::Location,
 };
 
@@ -17,7 +17,6 @@ pub enum Tile {
     SE90,
     Ground,
     Start,
-    Processed,
 }
 
 impl From<char> for Tile {
@@ -33,6 +32,21 @@ impl From<char> for Tile {
             'S' => Self::Start,
             _ => unreachable!("Invalid input {}", value),
         }
+    }
+}
+
+impl Display for Tile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Vertical => '|',
+            Self::Horizontal => '-',
+            Self::NE90 => 'L',
+            Self::NW90 => 'J',
+            Self::SW90 => '7',
+            Self::SE90 => 'F',
+            Self::Ground => '.',
+            Self::Start => 'S',
+        }.fmt(f)
     }
 }
 
@@ -53,6 +67,46 @@ impl Actor {
             cur_tile,
             num_left: 0,
             num_right: 0,
+        }
+    }
+
+    pub fn shoelace_right(&self) -> i64 {
+        if self.cur_tile == Tile::Vertical {
+            if self.facing == Cardinal::South {
+                self.location.col as i64 - 1
+            } else {
+                -(self.location.col as i64)
+            }
+        } else if self.cur_tile == Tile::NW90 && self.facing == Cardinal::North {
+            -(self.location.col as i64)
+        } else if self.cur_tile == Tile::SW90 && self.facing == Cardinal::West {
+            -(self.location.col as i64)
+        } else if self.cur_tile == Tile::NE90 && self.facing == Cardinal::East {
+            self.location.col as i64 - 1
+        } else if self.cur_tile == Tile::SE90 && self.facing == Cardinal::South {
+            self.location.col as i64 - 1
+        } else {
+            0
+        }
+    }
+
+    pub fn shoelace_left(&self) -> i64 {
+        if self.cur_tile == Tile::Vertical {
+            if self.facing == Cardinal::North {
+                self.location.col as i64 - 1
+            } else {
+                -(self.location.col as i64)
+            }
+        } else if self.cur_tile == Tile::NW90 && self.facing == Cardinal::West {
+            -(self.location.col as i64)
+        } else if self.cur_tile == Tile::SW90 && self.facing == Cardinal::South {
+            -(self.location.col as i64)
+        } else if self.cur_tile == Tile::NE90 && self.facing == Cardinal::North {
+            self.location.col as i64 - 1
+        } else if self.cur_tile == Tile::SE90 && self.facing == Cardinal::East {
+            self.location.col as i64 - 1
+        } else {
+            0
         }
     }
 
@@ -112,124 +166,6 @@ impl Actor {
             }
         }
     }
-
-    // because of the way we move there could be one or two locations we need
-    // to inspect to the right of us
-    pub fn right_locs(&self, out: &mut Vec<Location>, maze: &Grid<Tile>) {
-        match (self.facing, self.cur_tile) {
-            (Cardinal::North, Tile::NW90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::South) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::South, Tile::SE90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::North) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::East, Tile::NE90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::West) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::West, Tile::SW90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::East) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::North, Tile::NE90)
-            | (Cardinal::East, Tile::SE90)
-            | (Cardinal::West, Tile::NW90)
-            | (Cardinal::South, Tile::SW90) => {
-                return;
-            }
-            _ => { /* do nothing */ }
-        }
-
-        let right_dir = self.facing.right();
-        if let Some(loc) = self.location.cardinal_neighbor(right_dir) {
-            if let Some(t) = maze.get(&loc) {
-                if *t != Tile::Processed {
-                    out.push(loc);
-                }
-            }
-        }
-    }
-
-    // because of the way we move there could be one or two locations we need
-    // to inspect to the left of us
-    pub fn left_locs(&self, out: &mut Vec<Location>, maze: &Grid<Tile>) {
-        match (self.facing, self.cur_tile) {
-            (Cardinal::North, Tile::NE90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::South) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::South, Tile::SW90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::North) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::East, Tile::SE90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::West) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::West, Tile::NW90) => {
-                if let Some(loc) = self.location.cardinal_neighbor(Cardinal::East) {
-                    if let Some(t) = maze.get(&loc) {
-                        if *t != Tile::Processed {
-                            out.push(loc);
-                        }
-                    }
-                }
-            }
-            (Cardinal::North, Tile::NW90)
-            | (Cardinal::East, Tile::NE90)
-            | (Cardinal::West, Tile::SW90)
-            | (Cardinal::South, Tile::SE90) => {
-                return;
-            }
-            _ => { /* do nothing */ }
-        }
-
-        let left_dir = self.facing.left();
-        if let Some(loc) = self.location.cardinal_neighbor(left_dir) {
-            if let Some(t) = maze.get(&loc) {
-                if *t != Tile::Processed {
-                    out.push(loc);
-                }
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -243,10 +179,10 @@ pub struct PipeMaze {
 impl PipeMaze {
     pub fn process_loop(&mut self) {
         // get the two starting positions
-        let mut actor_one = self
+        let actors: Vec<_> = self
             .maze
             .cardinal_neighbors(&self.start)
-            .find_map(|(dir, loc, tile)| {
+            .filter_map(|(dir, loc, tile)| {
                 // we need to find the two that connect to us
                 match (dir, tile) {
                     (Cardinal::North, Tile::Vertical) | (Cardinal::South, Tile::Vertical) => {
@@ -266,67 +202,51 @@ impl PipeMaze {
                     _ => None,
                 }
             })
-            .expect("Invalid input starting location connections");
+            .collect();
 
-        let mut actor_snapshots = vec![actor_one];
-        let _ = self.maze.set(&actor_one.location, Tile::Processed);
+        // determine what the start _should_ be by using the relative directions
+        // between the two actors
+        // we know the unwrap is safe because these should be two distinct locations
+        let relative = actors[1].location.relative_direction_from(&actors[0].location).unwrap();
+        let start_tile = match relative {
+            Direction::East | Direction::West => Tile::Horizontal,
+            Direction::North | Direction::South => Tile::Vertical,
+            Direction::NorthWest => Tile::SW90,
+            Direction::SouthEast => Tile::NE90,
+            Direction::SouthWest => {
+                match actors[1].location.relative_direction_from(&self.start).unwrap() {
+                    Direction::West => Tile::NW90,
+                    Direction::South => Tile::SE90,
+                    _ => unreachable!("This configuration should not be possible {:?} {:?}", actors, relative)
+                }
+            }
+            _ => unreachable!("This configuration should not be possible {:?} {:?}", actors, relative)
+        };
+
+        self.maze.set(&self.start, start_tile).unwrap();
+
+        let mut actor_one = actors[0];
+
+        let mut shoelace_right = actor_one.shoelace_right();
+        let mut shoelace_left = actor_one.shoelace_left();
 
         while actor_one.location != self.start {
             self.steps += 1;
             actor_one.advance(&self.maze);
-            let _ = self.maze.set(&actor_one.location, Tile::Processed);
-            actor_snapshots.push(actor_one);
+            shoelace_right += actor_one.shoelace_right();
+            shoelace_left += actor_one.shoelace_left();
         }
-
-        let mut cur_locations = Vec::default();
-        let mut next_locations = Vec::default();
 
         // if we just had more right turns than left turns, it means the loop
         // contains things to our right
         if actor_one.num_right > actor_one.num_left {
-            for actor in actor_snapshots {
-                actor.right_locs(&mut cur_locations, &self.maze);
-
-                if !cur_locations.is_empty() {
-                    self.flood(&mut cur_locations, &mut next_locations);
-                    cur_locations.clear()
-                }
-            }
+            self.num_inside = shoelace_right as usize;
         } else {
-            // otherwise, the loop contains things to our left
-            for actor in actor_snapshots {
-                actor.left_locs(&mut cur_locations, &self.maze);
-
-                if !cur_locations.is_empty() {
-                    self.flood(&mut cur_locations, &mut next_locations);
-                    cur_locations.clear()
-                }
-            }
-        };
+            self.num_inside = shoelace_left as usize;
+        }
 
         // this actually always will evenly divide
         self.steps /= 2;
-    }
-
-    pub fn flood(&mut self, cur: &mut Vec<Location>, next: &mut Vec<Location>) {
-        for loc in cur.drain(..) {
-            if let Some(Tile::Processed) = self.maze.get(&loc) {
-                continue;
-            }
-            self.num_inside += 1;
-            let _ = self.maze.set(&loc, Tile::Processed);
-            next.extend(
-                self.maze
-                    .cardinal_neighbors(&loc)
-                    .filter_map(|(_, next_loc, t)| (*t != Tile::Processed).then_some(next_loc)),
-            );
-        }
-
-        std::mem::swap(cur, next);
-
-        if !cur.is_empty() {
-            self.flood(cur, next);
-        }
     }
 }
 
@@ -425,6 +345,7 @@ LJ...";
     }
 
     #[test]
+    // #[ignore]
     fn part_two_example() {
         let input = ".F----7F7F7F7F-7....
 .|F--7||||||||FJ....
@@ -442,6 +363,7 @@ L--J.L7...LJS7F-7L7.
     }
 
     #[test]
+    // #[ignore]
     fn part_two_example_harder() {
         let input = "FF7FSF7F7F7F7F7F---7
 L|LJ||||||||||||F--J
