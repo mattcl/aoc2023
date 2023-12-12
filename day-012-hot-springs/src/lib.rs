@@ -58,45 +58,86 @@ fn parse_springs(input: &str) -> IResult<&str, Vec<Spring>> {
 pub fn arrangements(
     input: &[u8],
     groups: &[u8],
-    group_num_left: Option<u8>,
-    seen: &mut FxHashMap<(usize, usize, Option<u8>), usize>,
+    seen: &mut FxHashMap<(usize, usize), usize>,
 ) -> usize {
-    let key = (input.len(), groups.len(), group_num_left);
+    if input.is_empty() {
+        if groups.is_empty() {
+            return 1;
+        }
+        return 0;
+    }
+
+    let key = (input.len(), groups.len());
+
     if let Some(cached) = seen.get(&key) {
         return *cached;
     }
 
     let num_arrangements = match input {
-        [] => match group_num_left {
-            Some(0) | None if groups.is_empty() => 1,
-            _ => 0,
-        },
+        [] => {
+            if groups.is_empty() {
+                1
+            } else {
+                0
+            }
+        }
         [first, remain @ ..] => match first {
-            b'?' => match group_num_left {
-                Some(0) => arrangements(remain, groups, None, seen),
-                Some(x) => arrangements(remain, groups, Some(x - 1), seen),
-                None => match groups {
-                    [] => arrangements(remain, groups, None, seen),
-                    [v, remaining_groups @ ..] => {
-                        arrangements(remain, remaining_groups, Some(v - 1), seen)
-                            + arrangements(remain, groups, None, seen)
+            b'?' => match groups {
+                [] => {
+                    if remain.iter().all(|ch| *ch != b'#') {
+                        1
+                    } else {
+                        0
                     }
-                },
-            },
-            b'#' => match group_num_left {
-                Some(0) => 0,
-                Some(x) => arrangements(remain, groups, Some(x - 1), seen),
-                None => match groups {
-                    [] => 0,
-                    [v, remaining_groups @ ..] => {
-                        arrangements(remain, remaining_groups, Some(v - 1), seen)
+                }
+                [v, remaining_groups @ ..] => {
+                    let needed = *v as usize - 1;
+                    if needed > remain.len() {
+                        0
+                    } else if remain.iter().take(needed).all(|ch| *ch != b'.') {
+                        if remain.len() == needed {
+                            if remaining_groups.is_empty() {
+                                1
+                            } else {
+                                0
+                            }
+                        } else if remain.len() > needed && remain[needed] != b'#' {
+                            // can we fill the group?
+                            // how to do this all at once?
+                            arrangements(&remain[(needed + 1)..], remaining_groups, seen)
+                                + arrangements(remain, groups, seen)
+                        } else {
+                            arrangements(remain, groups, seen)
+                        }
+                    } else {
+                        arrangements(remain, groups, seen)
                     }
-                },
+                }
             },
-            b'.' => match group_num_left {
-                Some(0) | None => arrangements(remain, groups, None, seen),
-                _ => 0,
+            b'#' => match groups {
+                [] => 0,
+                [v, remaining_groups @ ..] => {
+                    let needed = *v as usize - 1;
+                    if needed > remain.len() {
+                        0
+                    } else if remain.iter().take(needed).all(|ch| *ch != b'.') {
+                        if remain.len() == needed {
+                            if remaining_groups.is_empty() {
+                                1
+                            } else {
+                                0
+                            }
+                        } else if remain.len() > needed && remain[needed] != b'#' {
+                            arrangements(&remain[(needed + 1)..], remaining_groups, seen)
+                        } else {
+                            0
+                        }
+                    } else {
+                        0
+                    }
+                }
             },
+            b'.' => arrangements(remain, groups, seen),
             _ => unreachable!(),
         },
     };
@@ -117,7 +158,7 @@ impl HotSprings {
             .par_iter()
             .map(|s| {
                 let mut seen = FxHashMap::default();
-                arrangements(s.key.as_bytes(), &s.groups, None, &mut seen)
+                arrangements(s.key.as_bytes(), &s.groups, &mut seen)
             })
             .sum()
     }
@@ -127,7 +168,7 @@ impl HotSprings {
             .par_iter()
             .map(|s| {
                 let mut seen = FxHashMap::default();
-                arrangements(s.long_key.as_bytes(), &s.long_groups, None, &mut seen)
+                arrangements(s.long_key.as_bytes(), &s.long_groups, &mut seen)
             })
             .sum()
     }
