@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, hash::BuildHasherDefault};
 
 use aoc_plumbing::Problem;
 use itertools::Itertools;
@@ -19,10 +19,12 @@ pub struct Spring {
     long_key: String,
     groups: Vec<u8>,
     long_groups: Vec<u8>,
+    ends_with_question: bool,
 }
 
 impl Spring {
     pub fn new(key: &str, groups: Vec<u8>) -> Self {
+        let ends_with_question = key.ends_with("?");
         let long_key = [key].iter().cycle().take(5).join("?");
         let long_groups = groups
             .iter()
@@ -36,6 +38,7 @@ impl Spring {
             long_key,
             groups,
             long_groups,
+            ends_with_question,
         }
     }
 }
@@ -73,15 +76,10 @@ pub fn arrangements(
         return *cached;
     }
 
-    let num_arrangements = match input {
-        [] => {
-            if groups.is_empty() {
-                1
-            } else {
-                0
-            }
-        }
-        [first, remain @ ..] => match first {
+    // This is weird, but we already know we have this pattern because of the
+    // check at the top to bail out of the method before checking the cache.
+    let num_arrangements = if let [first, remain @ ..] = input {
+        match first {
             b'?' => match groups {
                 [] => {
                     if remain.iter().all(|ch| *ch != b'#') {
@@ -139,7 +137,9 @@ pub fn arrangements(
             },
             b'.' => arrangements(remain, groups, seen),
             _ => unreachable!(),
-        },
+        }
+    } else {
+        unreachable!()
     };
 
     seen.insert(key, num_arrangements);
@@ -167,7 +167,7 @@ impl HotSprings {
         self.springs
             .par_iter()
             .map(|s| {
-                let mut seen = FxHashMap::default();
+                let mut seen = FxHashMap::with_capacity_and_hasher(5000, BuildHasherDefault::default());
                 arrangements(s.long_key.as_bytes(), &s.long_groups, &mut seen)
             })
             .sum()

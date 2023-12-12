@@ -72,6 +72,7 @@ impl Actor {
     }
 
     pub fn shoelace_right(&self) -> i64 {
+        #[allow(clippy::if_same_then_else)]
         if self.cur_tile == Tile::Vertical {
             if self.facing == Cardinal::South {
                 self.location.col as i64 - 1
@@ -92,6 +93,7 @@ impl Actor {
     }
 
     pub fn shoelace_left(&self) -> i64 {
+        #[allow(clippy::if_same_then_else)]
         if self.cur_tile == Tile::Vertical {
             if self.facing == Cardinal::North {
                 self.location.col as i64 - 1
