@@ -6,6 +6,7 @@ use cosmic_expansion::CosmicExpansion;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
+use hot_springs::HotSprings;
 use mirage_maintenance::MirageMaintenance;
 use pipe_maze::PipeMaze;
 use scratchcards::Scratchcards;
@@ -88,6 +89,13 @@ aoc_benches! {
         "../day-011-cosmic-expansion/input.txt",
         CosmicExpansion,
         "Combined (including parsing)"
+    ),
+    (
+        day_012,
+        "../day-012-hot-springs/input.txt",
+        HotSprings,
+        "Part 1",
+        "Part 2"
     ),
     // bench_marker
 }

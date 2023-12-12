@@ -1,4 +1,4 @@
-use std::{str::FromStr, fmt::Display};
+use std::{fmt::Display, str::FromStr};
 
 use aoc_plumbing::Problem;
 use aoc_std::{
@@ -46,7 +46,8 @@ impl Display for Tile {
             Self::SE90 => 'F',
             Self::Ground => '.',
             Self::Start => 'S',
-        }.fmt(f)
+        }
+        .fmt(f)
     }
 }
 
@@ -207,20 +208,33 @@ impl PipeMaze {
         // determine what the start _should_ be by using the relative directions
         // between the two actors
         // we know the unwrap is safe because these should be two distinct locations
-        let relative = actors[1].location.relative_direction_from(&actors[0].location).unwrap();
+        let relative = actors[1]
+            .location
+            .relative_direction_from(&actors[0].location)
+            .unwrap();
         let start_tile = match relative {
             Direction::East | Direction::West => Tile::Horizontal,
             Direction::North | Direction::South => Tile::Vertical,
             Direction::NorthWest => Tile::SW90,
             Direction::SouthEast => Tile::NE90,
             Direction::SouthWest => {
-                match actors[1].location.relative_direction_from(&self.start).unwrap() {
+                match actors[1]
+                    .location
+                    .relative_direction_from(&self.start)
+                    .unwrap()
+                {
                     Direction::West => Tile::NW90,
                     Direction::South => Tile::SE90,
-                    _ => unreachable!("This configuration should not be possible {:?} {:?}", actors, relative)
+                    _ => unreachable!(
+                        "This configuration should not be possible {:?} {:?}",
+                        actors, relative
+                    ),
                 }
             }
-            _ => unreachable!("This configuration should not be possible {:?} {:?}", actors, relative)
+            _ => unreachable!(
+                "This configuration should not be possible {:?} {:?}",
+                actors, relative
+            ),
         };
 
         self.maze.set(&self.start, start_tile).unwrap();

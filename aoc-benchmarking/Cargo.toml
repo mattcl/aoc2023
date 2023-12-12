@@ -24,3 +24,4 @@ haunted-wasteland = { path = "../day-008-haunted-wasteland" }
 mirage-maintenance = { path = "../day-009-mirage-maintenance" }
 pipe-maze = { path = "../day-010-pipe-maze" }
 cosmic-expansion = { path = "../day-011-cosmic-expansion" }
+hot-springs = { path = "../day-012-hot-springs" }

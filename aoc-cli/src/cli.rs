@@ -12,6 +12,7 @@ use cosmic_expansion::CosmicExpansion;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
+use hot_springs::HotSprings;
 use mirage_maintenance::MirageMaintenance;
 use pipe_maze::PipeMaze;
 use scratchcards::Scratchcards;
@@ -186,5 +187,6 @@ generate_cli! {
     (MirageMaintenance, 9),
     (PipeMaze, 10),
     (CosmicExpansion, 11),
+    (HotSprings, 12),
     // command_marker
 }
