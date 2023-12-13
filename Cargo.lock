@@ -105,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -875,6 +875,7 @@ dependencies = [
  "aoc-plumbing",
  "aoc-std",
  "nom",
+ "rayon",
  "rustc-hash",
  "serde",
 ]

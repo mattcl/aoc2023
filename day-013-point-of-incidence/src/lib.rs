@@ -1,5 +1,8 @@
 use std::{fmt::Display, str::FromStr};
 
+use aoc_std::geometry::Point2D;
+use rayon::prelude::*;
+
 use aoc_plumbing::Problem;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -153,38 +156,40 @@ impl BitMirror {
 
 #[derive(Debug, Clone)]
 pub struct PointOfIncidence {
-    bit_mirrors: Vec<BitMirror>,
-}
-
-impl PointOfIncidence {
-    pub fn summarize(&self) -> usize {
-        self.bit_mirrors
-            .iter()
-            .map(|m| m.reflect_vertical().unwrap_or(0) + m.reflect_horizontal().unwrap_or(0))
-            .sum()
-    }
-
-    pub fn fix_smudge(&self) -> usize {
-        self.bit_mirrors
-            .iter()
-            .map(|m| {
-                m.reflect_vertical_one_off().unwrap_or(0)
-                    + m.reflect_horizontal_one_off().unwrap_or(0)
-            })
-            .sum()
-    }
+    p1: usize,
+    p2: usize,
 }
 
 impl FromStr for PointOfIncidence {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let bit_mirrors = s
-            .trim()
-            .split("\n\n")
-            .map(BitMirror::from_str)
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { bit_mirrors })
+        let groups = s.trim().split("\n\n").collect::<Vec<_>>();
+        let sums: Point2D<usize> = groups
+            .par_iter()
+            .filter_map(|group| {
+                BitMirror::from_str(group).ok().map(|mirror| {
+                    (
+                        // I guess we're making the assumption that only
+                        // one line of symmetry will be found per input,
+                        // which seems to be true?
+                        mirror
+                            .reflect_horizontal()
+                            .or_else(|| mirror.reflect_vertical())
+                            .unwrap_or(0),
+                        mirror
+                            .reflect_horizontal_one_off()
+                            .or_else(|| mirror.reflect_vertical_one_off())
+                            .unwrap_or(0),
+                    )
+                        .into()
+                })
+            })
+            .sum();
+        Ok(Self {
+            p1: sums.x,
+            p2: sums.y,
+        })
     }
 }
 
@@ -198,11 +203,11 @@ impl Problem for PointOfIncidence {
     type P2 = usize;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
-        Ok(self.summarize())
+        Ok(self.p1)
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        Ok(self.fix_smudge())
+        Ok(self.p2)
     }
 }
 

@@ -12,6 +12,6 @@ aoc-std = { workspace = true }
 anyhow = { workspace = true }
 # itertools = { workspace = true }
 nom = { workspace = true }
-# rayon = { workspace = true }
+rayon = { workspace = true }
 rustc-hash = { workspace = true }
 serde = { workspace = true }

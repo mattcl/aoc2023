@@ -102,8 +102,7 @@ aoc_benches! {
         day_013,
         "../day-013-point-of-incidence/input.txt",
         PointOfIncidence,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     // bench_marker
 }
