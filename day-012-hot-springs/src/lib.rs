@@ -1,4 +1,4 @@
-use std::{str::FromStr, hash::BuildHasherDefault};
+use std::{hash::BuildHasherDefault, str::FromStr};
 
 use aoc_plumbing::Problem;
 use itertools::Itertools;
@@ -19,12 +19,10 @@ pub struct Spring {
     long_key: String,
     groups: Vec<u8>,
     long_groups: Vec<u8>,
-    ends_with_question: bool,
 }
 
 impl Spring {
     pub fn new(key: &str, groups: Vec<u8>) -> Self {
-        let ends_with_question = key.ends_with("?");
         let long_key = [key].iter().cycle().take(5).join("?");
         let long_groups = groups
             .iter()
@@ -38,7 +36,6 @@ impl Spring {
             long_key,
             groups,
             long_groups,
-            ends_with_question,
         }
     }
 }
@@ -63,6 +60,14 @@ pub fn arrangements(
     groups: &[u8],
     seen: &mut FxHashMap<(usize, usize), usize>,
 ) -> usize {
+    if groups.is_empty() {
+        if input.contains(&b'#') {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
     if input.is_empty() {
         if groups.is_empty() {
             return 1;
@@ -135,7 +140,15 @@ pub fn arrangements(
                     }
                 }
             },
-            b'.' => arrangements(remain, groups, seen),
+            b'.' => {
+                if let Some((idx, _)) = remain.iter().enumerate().find(|(_, ch)| **ch != b'.') {
+                    arrangements(&remain[idx..], groups, seen)
+                } else if groups.is_empty() {
+                    1
+                } else {
+                    0
+                }
+            }
             _ => unreachable!(),
         }
     } else {
@@ -167,7 +180,8 @@ impl HotSprings {
         self.springs
             .par_iter()
             .map(|s| {
-                let mut seen = FxHashMap::with_capacity_and_hasher(5000, BuildHasherDefault::default());
+                let mut seen =
+                    FxHashMap::with_capacity_and_hasher(5000, BuildHasherDefault::default());
                 arrangements(s.long_key.as_bytes(), &s.long_groups, &mut seen)
             })
             .sum()
