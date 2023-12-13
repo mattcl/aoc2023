@@ -9,6 +9,7 @@ use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
 use mirage_maintenance::MirageMaintenance;
 use pipe_maze::PipeMaze;
+use point_of_incidence::PointOfIncidence;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -94,6 +95,13 @@ aoc_benches! {
         day_012,
         "../day-012-hot-springs/input.txt",
         HotSprings,
+        "Part 1",
+        "Part 2"
+    ),
+    (
+        day_013,
+        "../day-013-point-of-incidence/input.txt",
+        PointOfIncidence,
         "Part 1",
         "Part 2"
     ),

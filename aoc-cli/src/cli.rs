@@ -15,6 +15,7 @@ use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
 use mirage_maintenance::MirageMaintenance;
 use pipe_maze::PipeMaze;
+use point_of_incidence::PointOfIncidence;
 use scratchcards::Scratchcards;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -188,5 +189,6 @@ generate_cli! {
     (PipeMaze, 10),
     (CosmicExpansion, 11),
     (HotSprings, 12),
+    (PointOfIncidence, 13),
     // command_marker
 }
