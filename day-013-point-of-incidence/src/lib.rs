@@ -1,83 +1,124 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use aoc_plumbing::Problem;
-use aoc_std::collections::Grid;
 
-#[derive(Debug, Clone)]
-pub struct Mirror {
-    grid: Grid<char>,
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct BitMirror {
+    horizontal: Vec<u32>,
+    vertical: Vec<u32>,
+    width: usize,
+    height: usize,
 }
 
-impl FromStr for Mirror {
+impl FromStr for BitMirror {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let grid = Grid::from_str(s)?;
-        Ok(Self { grid })
+        let width = s.lines().next().map(|l| l.len()).unwrap_or_default();
+
+        let mut mirror = Self {
+            vertical: vec![0; width],
+            width,
+            ..Default::default()
+        };
+
+        for (row, line) in s.lines().enumerate() {
+            mirror
+                .horizontal
+                .push(line.chars().enumerate().fold(0, |acc, (col, ch)| {
+                    if ch == '#' {
+                        mirror.vertical[col] |= 1 << row;
+                        acc | (1 << col)
+                    } else {
+                        acc
+                    }
+                }));
+        }
+
+        mirror.height = mirror.horizontal.len();
+
+        Ok(mirror)
     }
 }
 
-impl Mirror {
+impl Display for BitMirror {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for row in self.horizontal.iter() {
+            writeln!(f, "{:018b}", row)?;
+        }
+        Ok(())
+    }
+}
+
+// 987654321
+// 011001101
+// 010110100
+// 100000011
+// 100000011
+// 010110100
+// 011001100
+// 010110101
+
+impl BitMirror {
     pub fn reflect_horizontal(&self) -> Option<usize> {
-        'outer: for left_col in 0..(self.grid.width() - 1) {
-            let right_col = left_col + 1;
-            for row in 0..self.grid.height() {
-                let limit = (left_col + 1).min(self.grid.width() - right_col);
-                for offset in 0..limit {
-                    if self.grid.locations[row][left_col - offset]
-                        != self.grid.locations[row][right_col + offset]
-                    {
-                        continue 'outer;
-                    }
+        'outer: for i in 1..self.width {
+            let limit = self.width - i;
+            let adjust = 32 - limit.min(i);
+            let mask = u32::MAX >> adjust;
+            let shift = if limit < i { i - limit } else { 0 };
+            for row in self.horizontal.iter() {
+                let reversed = (row >> i).reverse_bits() >> adjust;
+                let masked = (row >> shift) & mask;
+                if masked != reversed {
+                    continue 'outer;
                 }
             }
 
-            return Some(left_col + 1);
+            return Some(i);
         }
 
         None
     }
 
     pub fn reflect_vertical(&self) -> Option<usize> {
-        'outer: for top_row in 0..(self.grid.height() - 1) {
-            let bot_row = top_row + 1;
-            for col in 0..self.grid.width() {
-                let limit = (top_row + 1).min(self.grid.height() - bot_row);
-                for offset in 0..limit {
-                    if self.grid.locations[top_row - offset][col]
-                        != self.grid.locations[bot_row + offset][col]
-                    {
-                        continue 'outer;
-                    }
+        'outer: for i in 1..self.height {
+            let limit = self.height - i;
+            let adjust = 32 - limit.min(i);
+            let mask = u32::MAX >> adjust;
+            let shift = if limit < i { i - limit } else { 0 };
+            for col in self.vertical.iter() {
+                let reversed = (col >> i).reverse_bits() >> adjust;
+                let masked = (col >> shift) & mask;
+                if masked != reversed {
+                    continue 'outer;
                 }
             }
 
-            return Some((top_row + 1) * 100);
+            return Some(i * 100);
         }
 
         None
     }
 
     pub fn reflect_horizontal_one_off(&self) -> Option<usize> {
-        'outer: for left_col in 0..(self.grid.width() - 1) {
-            let mut count_off = 0;
-            let right_col = left_col + 1;
-            for row in 0..self.grid.height() {
-                let limit = (left_col + 1).min(self.grid.width() - right_col);
-                for offset in 0..limit {
-                    if self.grid.locations[row][left_col - offset]
-                        != self.grid.locations[row][right_col + offset]
-                    {
-                        count_off += 1;
-                        if count_off > 1 {
-                            continue 'outer;
-                        }
-                    }
+        'outer: for i in 1..self.width {
+            let mut one_count = 0;
+            let limit = self.width - i;
+            let adjust = 32 - limit.min(i);
+            let mask = u32::MAX >> adjust;
+            let shift = if limit < i { i - limit } else { 0 };
+            for row in self.horizontal.iter() {
+                let reversed = (row >> i).reverse_bits() >> adjust;
+                let masked = (row >> shift) & mask;
+                one_count += (masked ^ reversed).count_ones();
+
+                if one_count > 1 {
+                    continue 'outer;
                 }
             }
 
-            if count_off == 1 {
-                return Some(left_col + 1);
+            if one_count == 1 {
+                return Some(i);
             }
         }
 
@@ -85,25 +126,24 @@ impl Mirror {
     }
 
     pub fn reflect_vertical_one_off(&self) -> Option<usize> {
-        'outer: for top_row in 0..(self.grid.height() - 1) {
-            let mut count_off = 0;
-            let bot_row = top_row + 1;
-            for col in 0..self.grid.width() {
-                let limit = (top_row + 1).min(self.grid.height() - bot_row);
-                for offset in 0..limit {
-                    if self.grid.locations[top_row - offset][col]
-                        != self.grid.locations[bot_row + offset][col]
-                    {
-                        count_off += 1;
-                        if count_off > 1 {
-                            continue 'outer;
-                        }
-                    }
+        'outer: for i in 1..self.height {
+            let mut one_count = 0;
+            let limit = self.height - i;
+            let adjust = 32 - limit.min(i);
+            let mask = u32::MAX >> adjust;
+            let shift = if limit < i { i - limit } else { 0 };
+            for col in self.vertical.iter() {
+                let reversed = (col >> i).reverse_bits() >> adjust;
+                let masked = (col >> shift) & mask;
+                one_count += (masked ^ reversed).count_ones();
+
+                if one_count > 1 {
+                    continue 'outer;
                 }
             }
 
-            if count_off == 1 {
-                return Some((top_row + 1) * 100);
+            if one_count == 1 {
+                return Some(i * 100);
             }
         }
 
@@ -113,19 +153,19 @@ impl Mirror {
 
 #[derive(Debug, Clone)]
 pub struct PointOfIncidence {
-    mirrors: Vec<Mirror>,
+    bit_mirrors: Vec<BitMirror>,
 }
 
 impl PointOfIncidence {
     pub fn summarize(&self) -> usize {
-        self.mirrors
+        self.bit_mirrors
             .iter()
             .map(|m| m.reflect_vertical().unwrap_or(0) + m.reflect_horizontal().unwrap_or(0))
             .sum()
     }
 
     pub fn fix_smudge(&self) -> usize {
-        self.mirrors
+        self.bit_mirrors
             .iter()
             .map(|m| {
                 m.reflect_vertical_one_off().unwrap_or(0)
@@ -139,12 +179,12 @@ impl FromStr for PointOfIncidence {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mirrors = s
+        let bit_mirrors = s
             .trim()
             .split("\n\n")
-            .map(Mirror::from_str)
+            .map(BitMirror::from_str)
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { mirrors })
+        Ok(Self { bit_mirrors })
     }
 }
 
