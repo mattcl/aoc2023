@@ -32,6 +32,8 @@ impl Dish {
             self.tilt_south();
             let load = self.tilt_east();
 
+            loads.push(load);
+
             // make a key with the last ~8~ 4 loads
             if cycle_idx > 4 {
                 let key: u128 = loads[(loads.len() - 5)..]
@@ -47,15 +49,11 @@ impl Dish {
                 if *e != cycle_idx {
                     let period = cycle_idx - *e;
 
-                    if count % period == cycle_idx % period {
-                        let rem = (count - cycle_idx) % period;
-                        // we need to advance by rem in loads from the last index - 1
-                        return loads[*e + rem - 1];
-                    }
+                    let rem = (count - cycle_idx) % period;
+                    // we need to advance by rem in loads from the last index - 1
+                    return loads[*e + rem - 1];
                 }
             }
-
-            loads.push(load);
         }
 
         // we should never make it here
