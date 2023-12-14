@@ -14,6 +14,7 @@ use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
 use mirage_maintenance::MirageMaintenance;
+use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use scratchcards::Scratchcards;
@@ -190,5 +191,6 @@ generate_cli! {
     (CosmicExpansion, 11),
     (HotSprings, 12),
     (PointOfIncidence, 13),
+    (ParabolicReflectorDish, 14),
     // command_marker
 }

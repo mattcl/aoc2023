@@ -8,6 +8,7 @@ use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
 use mirage_maintenance::MirageMaintenance;
+use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use scratchcards::Scratchcards;
@@ -102,6 +103,12 @@ aoc_benches! {
         day_013,
         "../day-013-point-of-incidence/input.txt",
         PointOfIncidence,
+        "Combined (including parsing)"
+    ),
+    (
+        day_014,
+        "../day-014-parabolic-reflector-dish/input.txt",
+        ParabolicReflectorDish,
         "Combined (including parsing)"
     ),
     // bench_marker
