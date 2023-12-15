@@ -1,96 +1,56 @@
 use std::str::FromStr;
 
 use aoc_plumbing::Problem;
-use aoc_std::geometry::{AocPoint, Point2D};
-use itertools::Itertools;
-use rustc_hash::FxHashSet;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct Galaxy {
-    original: Point2D<i64>,
-    one: Point2D<i64>,
-    one_million: Point2D<i64>,
-}
-
-impl Galaxy {
-    pub fn new(location: Point2D<i64>) -> Self {
-        Self {
-            original: location,
-            one: location,
-            one_million: location,
+fn axis_sum(pos_counts: &[i64], expansion: usize) -> usize {
+    let mut total = 0;
+    let mut distance = 0;
+    let mut offset = 0;
+    let mut global_idx = 0;
+    for (idx, count) in pos_counts.iter().enumerate() {
+        let expansion_idx = idx + offset;
+        if *count == 0 {
+            offset += expansion;
+        } else {
+            for _ in 0..*count {
+                distance += global_idx * expansion_idx - total;
+                total += expansion_idx;
+                global_idx += 1;
+            }
         }
     }
+    distance
 }
 
 #[derive(Debug, Clone)]
 pub struct CosmicExpansion {
-    single_expansion: i64,
-    million_expansion: i64,
+    single_expansion: usize,
+    million_expansion: usize,
 }
 
 impl FromStr for CosmicExpansion {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut galaxies = Vec::default();
-
         let lines = s.trim().lines().collect::<Vec<_>>();
-        let width = lines[0].len() as i64;
+        let width = lines[0].len();
 
-        let mut num_empty_rows = 0_i64;
+        let mut row_counts = Vec::with_capacity(lines.len());
+        let mut col_counts = vec![0; width];
 
-        let mut empty_cols_raw = FxHashSet::from_iter(0..width);
-
-        for (row, line) in lines.into_iter().enumerate() {
-            let mut seen_row = false;
+        for line in lines {
+            let mut row_count = 0;
             for (col, ch) in line.chars().enumerate() {
                 if ch == '#' {
-                    seen_row = true;
-                    let mut galaxy = Galaxy::new(Point2D::new(col as i64, row as i64));
-                    galaxy.one.y += num_empty_rows;
-                    galaxy.one_million.y += num_empty_rows * 999999;
-                    galaxies.push(galaxy);
-                    empty_cols_raw.remove(&(col as i64));
+                    col_counts[col] += 1;
+                    row_count += 1;
                 }
             }
-
-            if !seen_row {
-                num_empty_rows += 1;
-            }
+            row_counts.push(row_count);
         }
 
-        let mut empty_cols = empty_cols_raw.into_iter().sorted().collect::<Vec<_>>();
-        empty_cols.push(width);
-
-        let mut counts = vec![0_i64; width as usize];
-
-        for ((_, col1), (idx2, col2)) in empty_cols.iter().enumerate().tuple_windows() {
-            for j in *col1..*col2 {
-                counts[j as usize] = idx2 as i64;
-            }
-        }
-
-        for g in galaxies.iter_mut() {
-            let multiple = counts[g.original.x as usize];
-            g.one.x += multiple;
-            g.one_million.x += 999_999 * multiple;
-        }
-
-        // we're 13 microseconds up to this point, and then the ~85k
-        // combinations add another 100 or so microseconds.
-        let Point2D {
-            x: single_expansion,
-            y: million_expansion,
-        } = galaxies
-            .iter()
-            .tuple_combinations()
-            .map(|(a, b)| {
-                Point2D::new(
-                    a.one.manhattan_dist(&b.one),
-                    a.one_million.manhattan_dist(&b.one_million),
-                )
-            })
-            .sum::<Point2D<i64>>();
+        let single_expansion = axis_sum(&row_counts, 1) + axis_sum(&col_counts, 1);
+        let million_expansion = axis_sum(&row_counts, 999_999) + axis_sum(&col_counts, 999_999);
 
         Ok(Self {
             single_expansion,
@@ -105,8 +65,8 @@ impl Problem for CosmicExpansion {
     const README: &'static str = include_str!("../README.md");
 
     type ProblemError = anyhow::Error;
-    type P1 = i64;
-    type P2 = i64;
+    type P1 = usize;
+    type P2 = usize;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
         Ok(self.single_expansion)

@@ -28,3 +28,7 @@ xxhash-rust = { version = "0.8.7", features = ["xxh3"] }
 
 [profile.release]
 lto = true
+codegen-units = 1
+
+[profile.bench]
+codegen-units = 1

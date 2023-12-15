@@ -158,8 +158,8 @@ impl FromStr for Dish {
 
         for row in 0..grid.height() {
             let mut interval_markers = vec![-1];
-            for col in 0..grid.width() {
-                match grid.locations[row][col] {
+            for (col, v) in grid.locations[row].iter().enumerate() {
+                match v {
                     '#' => {
                         col_interval_markers[col].push(row as i8);
                         interval_markers.push(col as i8);
