@@ -1,7 +1,8 @@
-use std::str::FromStr;
+use std::{collections::VecDeque, str::FromStr};
 
 use aoc_plumbing::Problem;
 use aoc_std::collections::FxIndexMap;
+use itertools::Itertools;
 use nom::{
     branch::alt,
     character::complete::{self, alpha1},
@@ -68,17 +69,57 @@ impl<'a> Bucket<'a> {
     pub fn remove(&mut self, label: &str) {
         self.values.shift_remove(label);
     }
+
+    #[inline]
+    pub fn focal_sum(&self) -> usize {
+        self.values
+            .iter()
+            .enumerate()
+            .map(|(v_idx, (_, v))| (v_idx + 1) * v.focal as usize)
+            .sum::<usize>()
+    }
+}
+
+/// In testing this is a few percent faster than the bucket using the index map
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct ListBucket<'a> {
+    values: VecDeque<Entry<'a>>,
+}
+
+impl<'a> ListBucket<'a> {
+    pub fn insert(&mut self, entry: Entry<'a>) {
+        if let Some((idx, _)) = self.values.iter().find_position(|v| v.label == entry.label) {
+            self.values[idx] = entry;
+        } else {
+            self.values.push_back(entry);
+        }
+    }
+
+    pub fn remove(&mut self, label: &str) {
+        if let Some((idx, _)) = self.values.iter().find_position(|v| v.label == label) {
+            self.values.remove(idx);
+        }
+    }
+
+    #[inline]
+    pub fn focal_sum(&self) -> usize {
+        self.values
+            .iter()
+            .enumerate()
+            .map(|(v_idx, v)| (v_idx + 1) * v.focal as usize)
+            .sum::<usize>()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HASHMap<'a> {
-    buckets: Vec<Bucket<'a>>,
+    buckets: Vec<ListBucket<'a>>,
 }
 
 impl<'a> Default for HASHMap<'a> {
     fn default() -> Self {
         Self {
-            buckets: vec![Bucket::default(); 256],
+            buckets: vec![ListBucket::default(); 256],
         }
     }
 }
@@ -97,16 +138,7 @@ impl<'a> HASHMap<'a> {
             // .par_iter()
             .iter()
             .enumerate()
-            .filter(|(_, b)| !b.values.is_empty())
-            .map(|(bucket_idx, bucket)| {
-                (bucket_idx + 1)
-                    * bucket
-                        .values
-                        .iter()
-                        .enumerate()
-                        .map(|(v_idx, (_, v))| (v_idx + 1) * v.focal as usize)
-                        .sum::<usize>()
-            })
+            .map(|(bucket_idx, bucket)| (bucket_idx + 1) * bucket.focal_sum())
             .sum()
     }
 }
