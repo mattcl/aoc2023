@@ -9,7 +9,6 @@ use nom::{
     sequence::{preceded, tuple},
     IResult,
 };
-use xxhash_rust::xxh3::xxh3_64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Op {
@@ -27,9 +26,9 @@ fn parse_op(input: &str) -> IResult<&str, Op> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Instruction {
+pub struct Instruction<'a> {
     bucket: usize,
-    label: u64,
+    label: &'a str,
     op: Op,
 }
 
@@ -41,7 +40,7 @@ fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
                     s.as_bytes()
                         .iter()
                         .fold(0, |acc, ch| ((acc + *ch as usize) * 17) % 256),
-                    xxh3_64(s.as_bytes()),
+                    s,
                 )
             }),
             parse_op,
@@ -51,32 +50,32 @@ fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Entry {
-    label: u64,
+pub struct Entry<'a> {
+    label: &'a str,
     focal: u8,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Bucket {
-    values: FxIndexMap<u64, Entry>,
+pub struct Bucket<'a> {
+    values: FxIndexMap<&'a str, Entry<'a>>,
 }
 
-impl Bucket {
-    pub fn insert(&mut self, entry: Entry) {
+impl<'a> Bucket<'a> {
+    pub fn insert(&mut self, entry: Entry<'a>) {
         self.values.insert(entry.label, entry);
     }
 
-    pub fn remove(&mut self, label: u64) {
-        self.values.shift_remove(&label);
+    pub fn remove(&mut self, label: &str) {
+        self.values.shift_remove(label);
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct HASHMap {
-    buckets: Vec<Bucket>,
+pub struct HASHMap<'a> {
+    buckets: Vec<Bucket<'a>>,
 }
 
-impl Default for HASHMap {
+impl<'a> Default for HASHMap<'a> {
     fn default() -> Self {
         Self {
             buckets: vec![Bucket::default(); 256],
@@ -84,12 +83,12 @@ impl Default for HASHMap {
     }
 }
 
-impl HASHMap {
-    pub fn insert(&mut self, bucket: usize, entry: Entry) {
+impl<'a> HASHMap<'a> {
+    pub fn insert(&mut self, bucket: usize, entry: Entry<'a>) {
         self.buckets[bucket].insert(entry);
     }
 
-    pub fn remove(&mut self, bucket: usize, label: u64) {
+    pub fn remove(&mut self, bucket: usize, label: &str) {
         self.buckets[bucket].remove(label);
     }
 
