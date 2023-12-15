@@ -7,6 +7,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
+use lens_library::LensLibrary;
 use mirage_maintenance::MirageMaintenance;
 use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
@@ -109,6 +110,12 @@ aoc_benches! {
         day_014,
         "../day-014-parabolic-reflector-dish/input.txt",
         ParabolicReflectorDish,
+        "Combined (including parsing)"
+    ),
+    (
+        day_015,
+        "../day-015-lens-library/input.txt",
+        LensLibrary,
         "Combined (including parsing)"
     ),
     // bench_marker

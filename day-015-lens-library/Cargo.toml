@@ -1,0 +1,18 @@
+[package]
+name = "lens-library"
+version = "0.1.0"
+edition = "2021"
+description = "lens library"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aoc-plumbing = { path = "../aoc-plumbing" }
+aoc-std = { workspace = true }
+anyhow = { workspace = true }
+itertools = { workspace = true }
+nom = { workspace = true }
+rayon = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true }
+xxhash-rust = { version = "0.8.7", features = ["xxh3"] }

@@ -13,6 +13,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
+use lens_library::LensLibrary;
 use mirage_maintenance::MirageMaintenance;
 use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
@@ -192,5 +193,6 @@ generate_cli! {
     (HotSprings, 12),
     (PointOfIncidence, 13),
     (ParabolicReflectorDish, 14),
+    (LensLibrary, 15),
     // command_marker
 }

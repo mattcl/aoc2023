@@ -1,0 +1,189 @@
+use std::str::FromStr;
+
+use aoc_plumbing::Problem;
+use aoc_std::collections::FxIndexMap;
+use nom::{
+    branch::alt,
+    character::complete::{self, alpha1},
+    combinator,
+    sequence::{preceded, tuple},
+    IResult,
+};
+use xxhash_rust::xxh3::xxh3_64;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Op {
+    Remove,
+    Assign(u8),
+}
+
+fn parse_op(input: &str) -> IResult<&str, Op> {
+    alt((
+        combinator::map(complete::char('-'), |_| Op::Remove),
+        combinator::map(preceded(complete::char('='), complete::u8), |v| {
+            Op::Assign(v)
+        }),
+    ))(input)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Instruction {
+    bucket: usize,
+    label: u64,
+    op: Op,
+}
+
+fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
+    combinator::map(
+        tuple((
+            combinator::map(alpha1, |s: &str| {
+                (
+                    s.as_bytes()
+                        .iter()
+                        .fold(0, |acc, ch| ((acc + *ch as usize) * 17) % 256),
+                    xxh3_64(s.as_bytes()),
+                )
+            }),
+            parse_op,
+        )),
+        |((bucket, label), op)| Instruction { bucket, label, op },
+    )(input)
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Entry {
+    label: u64,
+    focal: u8,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Bucket {
+    values: FxIndexMap<u64, Entry>,
+}
+
+impl Bucket {
+    pub fn insert(&mut self, entry: Entry) {
+        self.values.insert(entry.label, entry);
+    }
+
+    pub fn remove(&mut self, label: u64) {
+        self.values.shift_remove(&label);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HASHMap {
+    buckets: Vec<Bucket>,
+}
+
+impl Default for HASHMap {
+    fn default() -> Self {
+        Self {
+            buckets: vec![Bucket::default(); 256],
+        }
+    }
+}
+
+impl HASHMap {
+    pub fn insert(&mut self, bucket: usize, entry: Entry) {
+        self.buckets[bucket].insert(entry);
+    }
+
+    pub fn remove(&mut self, bucket: usize, label: u64) {
+        self.buckets[bucket].remove(label);
+    }
+
+    pub fn focusing_power(&self) -> usize {
+        self.buckets
+            // .par_iter()
+            .iter()
+            .enumerate()
+            .filter(|(_, b)| !b.values.is_empty())
+            .map(|(bucket_idx, bucket)| {
+                (bucket_idx + 1)
+                    * bucket
+                        .values
+                        .iter()
+                        .enumerate()
+                        .map(|(v_idx, (_, v))| (v_idx + 1) * v.focal as usize)
+                        .sum::<usize>()
+            })
+            .sum()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct LensLibrary {
+    p1: u32,
+    p2: usize,
+}
+
+impl FromStr for LensLibrary {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut hm = HASHMap::default();
+        let mut p1 = 0;
+        for step in s.trim().split(',') {
+            p1 += step
+                .as_bytes()
+                .iter()
+                .fold(0, |acc, ch| ((acc + *ch as u32) * 17) % 256);
+            let (_, inst) = parse_instruction(step).map_err(|e| e.to_owned())?;
+            match inst.op {
+                Op::Remove => hm.remove(inst.bucket, inst.label),
+                Op::Assign(v) => hm.insert(
+                    inst.bucket,
+                    Entry {
+                        label: inst.label,
+                        focal: v,
+                    },
+                ),
+            }
+        }
+        Ok(Self {
+            p1,
+            p2: hm.focusing_power(),
+        })
+    }
+}
+
+impl Problem for LensLibrary {
+    const DAY: usize = 15;
+    const TITLE: &'static str = "lens library";
+    const README: &'static str = include_str!("../README.md");
+
+    type ProblemError = anyhow::Error;
+    type P1 = u32;
+    type P2 = usize;
+
+    fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
+        Ok(self.p1)
+    }
+
+    fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
+        Ok(self.p2)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use aoc_plumbing::Solution;
+
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn full_dataset() {
+        let input = std::fs::read_to_string("input.txt").expect("Unable to load input");
+        let solution = LensLibrary::solve(&input).unwrap();
+        assert_eq!(solution, Solution::new(517015, 286104));
+    }
+
+    #[test]
+    fn example() {
+        let input = "rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7";
+        let solution = LensLibrary::solve(input).unwrap();
+        assert_eq!(solution, Solution::new(1320, 145));
+    }
+}

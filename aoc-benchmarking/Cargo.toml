@@ -27,3 +27,4 @@ cosmic-expansion = { path = "../day-011-cosmic-expansion" }
 hot-springs = { path = "../day-012-hot-springs" }
 point-of-incidence = { path = "../day-013-point-of-incidence" }
 parabolic-reflector-dish = { path = "../day-014-parabolic-reflector-dish" }
+lens-library = { path = "../day-015-lens-library" }
