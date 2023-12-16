@@ -28,3 +28,4 @@ hot-springs = { path = "../day-012-hot-springs" }
 point-of-incidence = { path = "../day-013-point-of-incidence" }
 parabolic-reflector-dish = { path = "../day-014-parabolic-reflector-dish" }
 lens-library = { path = "../day-015-lens-library" }
+the-floor-will-be-lava = { path = "../day-016-the-floor-will-be-lava" }

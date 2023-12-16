@@ -100,6 +100,7 @@ dependencies = [
  "pipe-maze",
  "point-of-incidence",
  "scratchcards",
+ "the-floor-will-be-lava",
  "trebuchet",
  "wait-for-it",
  "you-give-a-seed-a-fertilizer",
@@ -107,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.15.2"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -127,6 +128,7 @@ dependencies = [
  "scratchcards",
  "serde",
  "serde_json",
+ "the-floor-will-be-lava",
  "trebuchet",
  "wait-for-it",
  "you-give-a-seed-a-fertilizer",
@@ -1129,6 +1131,20 @@ checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
 dependencies = [
  "rustix",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "the-floor-will-be-lava"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rayon",
+ "rustc-hash",
+ "serde",
 ]
 
 [[package]]

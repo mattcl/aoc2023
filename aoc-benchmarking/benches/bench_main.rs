@@ -13,6 +13,7 @@ use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use scratchcards::Scratchcards;
+use the_floor_will_be_lava::TheFloorWillBeLava;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
 use you_give_a_seed_a_fertilizer::YouGiveASeedAFertilizer;
@@ -117,6 +118,13 @@ aoc_benches! {
         "../day-015-lens-library/input.txt",
         LensLibrary,
         "Combined (including parsing)"
+    ),
+    (
+        day_016,
+        "../day-016-the-floor-will-be-lava/input.txt",
+        TheFloorWillBeLava,
+        "Part 1",
+        "Part 2"
     ),
     // bench_marker
 }

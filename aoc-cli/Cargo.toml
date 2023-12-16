@@ -1,6 +1,6 @@
 [package]
 name = "aoc-cli"
-version = "0.15.2"
+version = "0.16.0"
 authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
 edition = "2021"
 description = "A command line interface for executing Advent of Code solutions."
@@ -31,3 +31,4 @@ hot-springs = { path = "../day-012-hot-springs" }
 point-of-incidence = { path = "../day-013-point-of-incidence" }
 parabolic-reflector-dish = { path = "../day-014-parabolic-reflector-dish" }
 lens-library = { path = "../day-015-lens-library" }
+the-floor-will-be-lava = { path = "../day-016-the-floor-will-be-lava" }
