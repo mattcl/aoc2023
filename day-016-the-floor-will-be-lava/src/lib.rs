@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{ops::BitOrAssign, str::FromStr};
 
 use aoc_plumbing::Problem;
 use aoc_std::{collections::Grid, directions::Cardinal, geometry::Location};
@@ -9,7 +9,6 @@ use nom::{
     IResult,
 };
 use rayon::prelude::*;
-use rustc_hash::{FxHashMap, FxHashSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Tile {
@@ -73,9 +72,58 @@ impl EnergizedSet {
     pub fn count(&self) -> usize {
         self.rows.iter().map(|r| r.count_ones() as usize).sum()
     }
+
+    pub fn contains(&self, location: &Location) -> bool {
+        self.rows[location.row] & 1 << location.col != 0
+    }
 }
 
-pub type JunctionCache = FxHashMap<(Location, Cardinal), EnergizedSet>;
+impl BitOrAssign for EnergizedSet {
+    fn bitor_assign(&mut self, rhs: Self) {
+        for i in 0..self.rows.len() {
+            self.rows[i] |= rhs.rows[i];
+        }
+    }
+}
+
+/// Our primary goal is to reduce the time it takes to iterate through one of
+/// the beam propagations. This mapping is faster than FxHashSet.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
+pub struct VisistedMap {
+    north: EnergizedSet,
+    south: EnergizedSet,
+    east: EnergizedSet,
+    west: EnergizedSet,
+}
+
+impl VisistedMap {
+    pub fn new(num_rows: usize) -> Self {
+        Self {
+            north: EnergizedSet::new(num_rows),
+            south: EnergizedSet::new(num_rows),
+            east: EnergizedSet::new(num_rows),
+            west: EnergizedSet::new(num_rows),
+        }
+    }
+
+    pub fn add(&mut self, particle: &Particle) {
+        match particle.facing {
+            Cardinal::North => self.north.add(&particle.location),
+            Cardinal::South => self.south.add(&particle.location),
+            Cardinal::East => self.east.add(&particle.location),
+            Cardinal::West => self.west.add(&particle.location),
+        }
+    }
+
+    pub fn contains(&mut self, particle: &Particle) -> bool {
+        match particle.facing {
+            Cardinal::North => self.north.contains(&particle.location),
+            Cardinal::South => self.south.contains(&particle.location),
+            Cardinal::East => self.east.contains(&particle.location),
+            Cardinal::West => self.west.contains(&particle.location),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct TheFloorWillBeLava {
@@ -83,12 +131,9 @@ pub struct TheFloorWillBeLava {
 }
 
 impl TheFloorWillBeLava {
-    pub fn propagate_junction(
-        &self,
-        start: Particle,
-        junction_cache: &mut JunctionCache,
-    ) -> EnergizedSet {
-        let mut seen: FxHashSet<Particle> = FxHashSet::default();
+    pub fn propagate(&self, start: Particle) -> EnergizedSet {
+        // let mut seen: FxHashSet<Particle> = FxHashSet::default();
+        let mut seen = VisistedMap::new(self.grid.height());
         let mut energized = EnergizedSet::new(self.grid.height());
 
         let mut beams = vec![start];
@@ -97,12 +142,13 @@ impl TheFloorWillBeLava {
             if seen.contains(&beam) {
                 continue;
             }
-            seen.insert(beam);
+            seen.add(&beam);
             energized.add(&beam.location);
 
             let tile = self.grid.get(&beam.location).unwrap();
 
             match tile {
+                Tile::Empty => {}
                 Tile::MirrorF => match beam.facing {
                     Cardinal::North => beam.facing = Cardinal::East,
                     Cardinal::South => beam.facing = Cardinal::West,
@@ -145,7 +191,6 @@ impl TheFloorWillBeLava {
                     }
                     _ => {}
                 },
-                Tile::Empty => {}
             }
 
             if let Some((next, _)) = self.grid.cardinal_neighbor(&beam.location, beam.facing) {
@@ -155,76 +200,6 @@ impl TheFloorWillBeLava {
         }
 
         energized
-    }
-
-    pub fn propagate(&self, start: Particle) -> usize {
-        let mut seen: FxHashSet<Particle> = FxHashSet::default();
-        let mut energized = EnergizedSet::new(self.grid.height());
-
-        let mut beams = vec![start];
-
-        while let Some(mut beam) = beams.pop() {
-            if seen.contains(&beam) {
-                continue;
-            }
-            seen.insert(beam);
-            energized.add(&beam.location);
-
-            let tile = self.grid.get(&beam.location).unwrap();
-
-            match tile {
-                Tile::Empty => {}
-                Tile::MirrorF => match beam.facing {
-                    Cardinal::North => beam.facing = Cardinal::East,
-                    Cardinal::South => beam.facing = Cardinal::West,
-                    Cardinal::East => beam.facing = Cardinal::North,
-                    Cardinal::West => beam.facing = Cardinal::South,
-                },
-                Tile::MirrorB => match beam.facing {
-                    Cardinal::North => beam.facing = Cardinal::West,
-                    Cardinal::South => beam.facing = Cardinal::East,
-                    Cardinal::East => beam.facing = Cardinal::South,
-                    Cardinal::West => beam.facing = Cardinal::North,
-                },
-                Tile::HorizSplit => match beam.facing {
-                    Cardinal::North | Cardinal::South => {
-                        let mut other = beam;
-                        other.facing = Cardinal::East;
-                        if let Some((next, _)) =
-                            self.grid.cardinal_neighbor(&other.location, other.facing)
-                        {
-                            other.location = next;
-                            beams.push(other);
-                        }
-
-                        beam.facing = Cardinal::West;
-                    }
-                    _ => {}
-                },
-                Tile::VertSplit => match beam.facing {
-                    Cardinal::East | Cardinal::West => {
-                        let mut other = beam;
-                        other.facing = Cardinal::North;
-                        if let Some((next, _)) =
-                            self.grid.cardinal_neighbor(&other.location, other.facing)
-                        {
-                            other.location = next;
-                            beams.push(other);
-                        }
-
-                        beam.facing = Cardinal::South;
-                    }
-                    _ => {}
-                },
-            }
-
-            if let Some((next, _)) = self.grid.cardinal_neighbor(&beam.location, beam.facing) {
-                beam.location = next;
-                beams.push(beam);
-            }
-        }
-
-        energized.count()
     }
 
     pub fn propagate_all(&self) -> usize {
@@ -256,7 +231,7 @@ impl TheFloorWillBeLava {
 
         starting_particles
             .into_par_iter()
-            .map(|p| self.propagate(p))
+            .map(|p| self.propagate(p).count())
             .max()
             .unwrap_or_default()
     }
@@ -284,7 +259,7 @@ impl Problem for TheFloorWillBeLava {
     type P2 = usize;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
-        Ok(self.propagate(Particle::default()))
+        Ok(self.propagate(Particle::default()).count())
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
