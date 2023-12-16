@@ -123,6 +123,15 @@ impl VisistedMap {
             Cardinal::West => self.west.contains(&particle.location),
         }
     }
+
+    pub fn contains_opposite(&mut self, particle: &Particle) -> bool {
+        match particle.facing {
+            Cardinal::North => self.south.contains(&particle.location),
+            Cardinal::South => self.north.contains(&particle.location),
+            Cardinal::East => self.west.contains(&particle.location),
+            Cardinal::West => self.east.contains(&particle.location),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -139,13 +148,13 @@ impl TheFloorWillBeLava {
         let mut beams = vec![start];
 
         while let Some(mut beam) = beams.pop() {
-            if seen.contains(&beam) {
+            let tile = self.grid.get(&beam.location).unwrap();
+            if seen.contains(&beam) || (*tile == Tile::Empty && seen.contains_opposite(&beam)) {
                 continue;
             }
             seen.add(&beam);
             energized.add(&beam.location);
 
-            let tile = self.grid.get(&beam.location).unwrap();
 
             match tile {
                 Tile::Empty => {}
