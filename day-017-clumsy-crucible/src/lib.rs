@@ -7,18 +7,27 @@ use aoc_std::{
 };
 
 // we actually only need to know which directions our left and right are, since
-// we're going to precompute the whole path
+// we're going to precompute all the nodes between min-max so n/s e/w are
+// indistinguishable
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Orientation {
     Horizontal,
     Vertical,
 }
 
-#[derive(Debug, Clone, Copy)]
+impl Orientation {
+    pub fn switch(&self) -> Self {
+        match self {
+            Self::Vertical => Self::Horizontal,
+            Self::Horizontal => Self::Vertical,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node {
     location: Location,
     orientation: Orientation,
-    facing: Cardinal,
 }
 
 impl Default for Node {
@@ -26,25 +35,12 @@ impl Default for Node {
         Self {
             location: Location::default(),
             orientation: Orientation::Horizontal,
-            facing: Cardinal::East,
         }
     }
 }
 
-impl PartialEq for Node {
-    fn eq(&self, other: &Self) -> bool {
-        self.location == other.location && self.orientation == other.orientation
-    }
-}
-
-impl Eq for Node {}
-
-impl Hash for Node {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.location.hash(state);
-        self.orientation.hash(state);
-    }
-}
+const HORIZ_NEXT: [Cardinal; 2] = [Cardinal::North, Cardinal::South];
+const VERT_NEXT: [Cardinal; 2] = [Cardinal::West, Cardinal::East];
 
 #[derive(Debug, Clone)]
 pub struct Blocks {
@@ -89,7 +85,6 @@ impl Blocks {
                 Some((
                     Node {
                         location: Location::new(new_row, start.col),
-                        facing: dir,
                         orientation: Orientation::Vertical,
                     },
                     cost,
@@ -101,7 +96,6 @@ impl Blocks {
                 Some((
                     Node {
                         location: Location::new(new_row, start.col),
-                        facing: dir,
                         orientation: Orientation::Vertical,
                     },
                     cost,
@@ -113,7 +107,6 @@ impl Blocks {
                 Some((
                     Node {
                         location: Location::new(start.row, new_col),
-                        facing: dir,
                         orientation: Orientation::Horizontal,
                     },
                     cost,
@@ -125,7 +118,6 @@ impl Blocks {
                 Some((
                     Node {
                         location: Location::new(start.row, new_col),
-                        facing: dir,
                         orientation: Orientation::Horizontal,
                     },
                     cost,
@@ -147,8 +139,10 @@ impl Blocks {
                 if first {
                     first = false;
                     [Cardinal::East, Cardinal::South]
+                } else if old.orientation == Orientation::Horizontal {
+                    HORIZ_NEXT
                 } else {
-                    [old.facing.left(), old.facing.right()]
+                    VERT_NEXT
                 }
                 .into_iter()
                 .flat_map(move |dir| self.all_in_direction(old.location, dir, min, max))
