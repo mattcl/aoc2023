@@ -88,6 +88,7 @@ version = "0.1.0"
 dependencies = [
  "aoc-plumbing",
  "camel-cards",
+ "clumsy-crucible",
  "cosmic-expansion",
  "criterion",
  "cube-conundrum",
@@ -108,13 +109,14 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.16.3"
+version = "0.17.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
  "camel-cards",
  "clap",
  "clap_complete",
+ "clumsy-crucible",
  "cosmic-expansion",
  "cube-conundrum",
  "gear-ratios",
@@ -183,9 +185,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-pathing"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "7229faf7cd0fbe7064d528b15bc35b1fb946c87cec637fb2dbba326c2abeb8ec"
+checksum = "a6fa2f0a9bfbdea29bd3bec5c904824aecbc9515b468f402e4eb00ab1d707aee"
 dependencies = [
  "aoc-collections",
  "num",
@@ -203,9 +205,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-std"
-version = "0.3.9"
+version = "0.3.10"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "2a26c0b95f8bbf0d971269076d486f1ab8dceb3625a2057a2de626c661c32a3b"
+checksum = "a41cc12130ede1d61765d31c62a6e8a98d8262d7a1e16465aee50a32d0f398dc"
 dependencies = [
  "aoc-collections",
  "aoc-conversions",
@@ -367,6 +369,18 @@ name = "clap_lex"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
+
+[[package]]
+name = "clumsy-crucible"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "nom",
+ "rustc-hash",
+ "serde",
+]
 
 [[package]]
 name = "colorchoice"
@@ -1149,18 +1163,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9a7210f5c9a7156bb50aa36aed4c95afb51df0df00713949448cf9e97d382d2"
+checksum = "f11c217e1416d6f036b870f14e0413d480dbf28edbee1f877abaf0206af43bb7"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "266b2e40bc00e5a6c09c3584011e08b06f123c00362c92b975ba9843aaaa14b8"
+checksum = "01742297787513b79cf8e29d1056ede1313e2420b7b3b15d0a768b4921f549df"
 dependencies = [
  "proc-macro2",
  "quote",

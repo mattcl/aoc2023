@@ -8,6 +8,7 @@ use aoc_plumbing::Problem;
 use camel_cards::CamelCards;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, shells::Zsh};
+use clumsy_crucible::ClumsyCrucible;
 use cosmic_expansion::CosmicExpansion;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
@@ -196,5 +197,6 @@ generate_cli! {
     (ParabolicReflectorDish, 14),
     (LensLibrary, 15),
     (TheFloorWillBeLava, 16),
+    (ClumsyCrucible, 17),
     // command_marker
 }

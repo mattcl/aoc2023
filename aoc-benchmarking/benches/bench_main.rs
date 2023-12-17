@@ -2,6 +2,7 @@ use criterion::criterion_main;
 
 use aoc_benchmarking::aoc_benches;
 use camel_cards::CamelCards;
+use clumsy_crucible::ClumsyCrucible;
 use cosmic_expansion::CosmicExpansion;
 use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
@@ -123,6 +124,13 @@ aoc_benches! {
         day_016,
         "../day-016-the-floor-will-be-lava/input.txt",
         TheFloorWillBeLava,
+        "Part 1",
+        "Part 2"
+    ),
+    (
+        day_017,
+        "../day-017-clumsy-crucible/input.txt",
+        ClumsyCrucible,
         "Part 1",
         "Part 2"
     ),

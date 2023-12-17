@@ -155,7 +155,6 @@ impl TheFloorWillBeLava {
             seen.add(&beam);
             energized.add(&beam.location);
 
-
             match tile {
                 Tile::Empty => {}
                 Tile::MirrorF => match beam.facing {
