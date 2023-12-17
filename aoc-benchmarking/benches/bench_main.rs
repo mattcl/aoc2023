@@ -131,8 +131,7 @@ aoc_benches! {
         day_017,
         "../day-017-clumsy-crucible/input.txt",
         ClumsyCrucible,
-        "Part 1",
-        "Part 2"
+        "Combined (including parsing)"
     ),
     // bench_marker
 }

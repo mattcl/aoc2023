@@ -1,5 +1,6 @@
-use std::{hash::Hash, str::FromStr};
+use std::{hash::Hash, str::FromStr, sync::Arc, thread};
 
+use anyhow::anyhow;
 use aoc_plumbing::Problem;
 use aoc_std::{
     collections::Grid, directions::Cardinal, geometry::Location, pathing::dijkstra::dijkstra,
@@ -29,11 +30,11 @@ impl Hash for Node {
 }
 
 #[derive(Debug, Clone)]
-pub struct ClumsyCrucible {
+pub struct Blocks {
     grid: Grid<u32>,
 }
 
-impl ClumsyCrucible {
+impl Blocks {
     pub fn minimize(&self) -> u32 {
         let start = Node::default();
         let end = Location::new(self.grid.height() - 1, self.grid.width() - 1);
@@ -140,6 +141,12 @@ impl ClumsyCrucible {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ClumsyCrucible {
+    p1: u32,
+    p2: u32,
+}
+
 impl FromStr for ClumsyCrucible {
     type Err = anyhow::Error;
 
@@ -154,8 +161,26 @@ impl FromStr for ClumsyCrucible {
             })
             .collect::<Vec<_>>();
 
-        let grid = Grid::new(values);
-        Ok(Self { grid })
+        // Ordinarilly I wouldn't do this, but given how long each part takes
+        // and that each part is actually independent, this at least mostly
+        // makes the time to solve the same as the time to solve part 2
+        let blocks = Arc::new(Blocks {
+            grid: Grid::new(values),
+        });
+        let p2_blocks = blocks.clone();
+
+        let p1_handle = thread::spawn(move || blocks.minimize());
+
+        let p2_handle = thread::spawn(move || p2_blocks.ultra_minimize());
+
+        let p1 = p1_handle
+            .join()
+            .map_err(|e| anyhow!("failed to solve p1: {:?}", e))?;
+        let p2 = p2_handle
+            .join()
+            .map_err(|e| anyhow!("failed to solve p2: {:?}", e))?;
+
+        Ok(Self { p1, p2 })
     }
 }
 
@@ -169,11 +194,11 @@ impl Problem for ClumsyCrucible {
     type P2 = u32;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
-        Ok(self.minimize())
+        Ok(self.p1)
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        Ok(self.ultra_minimize())
+        Ok(self.p2)
     }
 }
 
