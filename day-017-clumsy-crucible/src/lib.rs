@@ -6,7 +6,7 @@ use aoc_std::{
     collections::Grid, directions::Cardinal, geometry::Location, pathing::dijkstra::dijkstra,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node {
     location: Location,
     num_straight: usize,
@@ -20,12 +20,6 @@ impl Default for Node {
             num_straight: 1,
             facing: Cardinal::East,
         }
-    }
-}
-
-impl Hash for Node {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.location.hash(state);
     }
 }
 
@@ -85,12 +79,17 @@ impl Blocks {
             &start,
             &mut |node| {
                 let old = *node;
-                self.grid.cardinal_neighbors(&node.location).filter_map(
-                    move |(facing, location, cost)| {
-                        if facing == old.facing {
-                            if old.num_straight > 9 {
-                                None
-                            } else {
+
+                if old.num_straight > 9 {
+                    vec![old.facing.left(), old.facing.right()]
+                } else {
+                    vec![old.facing, old.facing.left(), old.facing.right()]
+                }
+                    .into_iter()
+                    .filter_map(move |d| self.grid.cardinal_neighbor(&old.location, d).map(|(l, v)| (d, l, v)))
+                    .filter_map(
+                        move |(facing, location, cost)| {
+                            if facing == old.facing {
                                 Some((
                                     Node {
                                         location,
@@ -99,40 +98,37 @@ impl Blocks {
                                     },
                                     *cost,
                                 ))
-                            }
-                        } else if facing != old.facing.opposite() {
-                            // attempt to move three additional spots from this
-                            // neighbor in the determined direction
-                            let mut total_cost = *cost;
-                            if let Some((four_away, v)) = self
-                                .grid
-                                .cardinal_neighbor(&location, facing)
-                                .and_then(|(next_loc, v)| {
-                                    total_cost += *v;
-                                    self.grid.cardinal_neighbor(&next_loc, facing)
-                                })
-                                .and_then(|(next_loc, v)| {
-                                    total_cost += *v;
-                                    self.grid.cardinal_neighbor(&next_loc, facing)
-                                })
-                            {
-                                total_cost += v;
-                                Some((
-                                    Node {
-                                        location: four_away,
-                                        facing,
-                                        num_straight: 4,
-                                    },
-                                    total_cost,
-                                ))
                             } else {
-                                None
+                                // attempt to move three additional spots from this
+                                // neighbor in the determined direction
+                                let mut total_cost = *cost;
+                                if let Some((four_away, v)) = self
+                                    .grid
+                                    .cardinal_neighbor(&location, facing)
+                                    .and_then(|(next_loc, v)| {
+                                        total_cost += *v;
+                                        self.grid.cardinal_neighbor(&next_loc, facing)
+                                    })
+                                    .and_then(|(next_loc, v)| {
+                                        total_cost += *v;
+                                        self.grid.cardinal_neighbor(&next_loc, facing)
+                                    })
+                                {
+                                    total_cost += v;
+                                    Some((
+                                        Node {
+                                            location: four_away,
+                                            facing,
+                                            num_straight: 4,
+                                        },
+                                        total_cost,
+                                    ))
+                                } else {
+                                    None
+                                }
                             }
-                        } else {
-                            None
-                        }
-                    },
-                )
+                        },
+                    )
             },
             &mut |node| node.location == end,
         );
