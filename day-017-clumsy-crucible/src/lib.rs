@@ -9,7 +9,6 @@ use aoc_std::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node {
     location: Location,
-    num_straight: usize,
     facing: Cardinal,
 }
 
@@ -17,7 +16,6 @@ impl Default for Node {
     fn default() -> Self {
         Self {
             location: Location::default(),
-            num_straight: 1,
             facing: Cardinal::East,
         }
     }
@@ -29,112 +27,90 @@ pub struct Blocks {
 }
 
 impl Blocks {
-    pub fn minimize(&self) -> u32 {
-        let start = Node::default();
-        let end = Location::new(self.grid.height() - 1, self.grid.width() - 1);
-        let result = dijkstra(
-            &start,
-            &mut |node| {
-                let old = *node;
-
-                if old.num_straight > 2 {
-                    vec![old.facing.left(), old.facing.right()]
-                } else {
-                    vec![old.facing, old.facing.left(), old.facing.right()]
+    pub fn all_in_direction(&self, start: Location, dir: Cardinal, min: usize, max: usize) -> impl Iterator<Item=(Node, u32)> + '_ {
+        // precompute cost below the min
+        let mut cost = (1..min)
+            .map(|i| {
+                match dir {
+                    Cardinal::North if start.row >= i => {
+                        let new_row = start.row - i;
+                        self.grid.locations[new_row][start.col]
+                    },
+                    Cardinal::South if self.grid.height() > start.row + i => {
+                        let new_row = start.row + i;
+                        self.grid.locations[new_row][start.col]
+                    },
+                    Cardinal::West if start.col >= i => {
+                        let new_col = start.col - i;
+                        self.grid.locations[start.row][new_col]
+                    },
+                    Cardinal::East if self.grid.width() > start.col + i => {
+                        let new_col = start.col + i;
+                        self.grid.locations[start.row][new_col]
+                    },
+                    _ => 0
                 }
-                .into_iter()
-                .filter_map(move |d| {
-                    self.grid
-                        .cardinal_neighbor(&old.location, d)
-                        .map(|(l, v)| (d, l, v))
-                })
-                .filter_map(move |(facing, location, cost)| {
-                    if facing == old.facing {
-                        Some((
-                            Node {
-                                location,
-                                facing,
-                                num_straight: old.num_straight + 1,
-                            },
-                            *cost,
-                        ))
-                    } else {
-                        Some((
-                            Node {
-                                location,
-                                facing,
-                                num_straight: 1,
-                            },
-                            *cost,
-                        ))
-                    }
-                })
-            },
-            &mut |node| node.location == end,
-        );
+            })
+            .sum();
 
-        result.cost().unwrap_or_default()
+        (min..=max)
+            .filter_map(move |i| {
+                match dir {
+                    Cardinal::North if start.row >= i => {
+                        let new_row = start.row - i;
+                        cost += self.grid.locations[new_row][start.col];
+                        Some((
+                            Node { location: Location::new(new_row, start.col), facing: dir },
+                            cost
+                        ))
+                    },
+                    Cardinal::South if self.grid.height() > start.row + i => {
+                        let new_row = start.row + i;
+                        cost += self.grid.locations[new_row][start.col];
+                        Some((
+                            Node { location: Location::new(new_row, start.col), facing: dir },
+                            cost
+                        ))
+                    },
+                    Cardinal::West if start.col >= i => {
+                        let new_col = start.col - i;
+                        cost += self.grid.locations[start.row][new_col];
+                        Some((
+                            Node { location: Location::new(start.row, new_col), facing: dir },
+                            cost
+                        ))
+                    },
+                    Cardinal::East if self.grid.width() > start.col + i => {
+                        let new_col = start.col + i;
+                        cost += self.grid.locations[start.row][new_col];
+                        Some((
+                            Node { location: Location::new(start.row, new_col), facing: dir },
+                            cost
+                        ))
+                    },
+                    _ => None
+                }
+            })
     }
 
-    pub fn ultra_minimize(&self) -> u32 {
+    pub fn minimize(&self, min: usize, max: usize) -> u32 {
         let start = Node::default();
         let end = Location::new(self.grid.height() - 1, self.grid.width() - 1);
+        let mut first = true;
         let result = dijkstra(
             &start,
             &mut |node| {
                 let old = *node;
 
-                if old.num_straight > 9 {
-                    vec![old.facing.left(), old.facing.right()]
+                if first {
+                    first = false;
+                    [Cardinal::East, Cardinal::South]
                 } else {
-                    vec![old.facing, old.facing.left(), old.facing.right()]
+                    [old.facing.left(), old.facing.right()]
                 }
-                .into_iter()
-                .filter_map(move |d| {
-                    self.grid
-                        .cardinal_neighbor(&old.location, d)
-                        .map(|(l, v)| (d, l, v))
-                })
-                .filter_map(move |(facing, location, cost)| {
-                    if facing == old.facing {
-                        Some((
-                            Node {
-                                location,
-                                facing,
-                                num_straight: old.num_straight + 1,
-                            },
-                            *cost,
-                        ))
-                    } else {
-                        // attempt to move three additional spots from this
-                        // neighbor in the determined direction
-                        let mut total_cost = *cost;
-                        if let Some((four_away, v)) = self
-                            .grid
-                            .cardinal_neighbor(&location, facing)
-                            .and_then(|(next_loc, v)| {
-                                total_cost += *v;
-                                self.grid.cardinal_neighbor(&next_loc, facing)
-                            })
-                            .and_then(|(next_loc, v)| {
-                                total_cost += *v;
-                                self.grid.cardinal_neighbor(&next_loc, facing)
-                            })
-                        {
-                            total_cost += v;
-                            Some((
-                                Node {
-                                    location: four_away,
-                                    facing,
-                                    num_straight: 4,
-                                },
-                                total_cost,
-                            ))
-                        } else {
-                            None
-                        }
-                    }
-                })
+                    .into_iter()
+                    .map(move |dir| self.all_in_direction(old.location, dir, min, max))
+                    .flatten()
             },
             &mut |node| node.location == end,
         );
@@ -171,9 +147,8 @@ impl FromStr for ClumsyCrucible {
         });
         let p2_blocks = blocks.clone();
 
-        let p1_handle = thread::spawn(move || blocks.minimize());
-
-        let p2_handle = thread::spawn(move || p2_blocks.ultra_minimize());
+        let p1_handle = thread::spawn(move || blocks.minimize(1, 3));
+        let p2_handle = thread::spawn(move || p2_blocks.minimize(4, 10));
 
         let p1 = p1_handle
             .join()
