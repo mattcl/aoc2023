@@ -56,74 +56,81 @@ impl Blocks {
         max: usize,
     ) -> impl Iterator<Item = (Node, u32)> + '_ {
         // precompute cost below the min
-        let mut cost = (1..min)
-            .map(|i| match dir {
+        let mut cost = 0;
+        for i in 1..min {
+            match dir {
                 Cardinal::North if start.row >= i => {
                     let new_row = start.row - i;
-                    self.grid.locations[new_row][start.col]
+                    cost += self.grid.locations[new_row][start.col];
                 }
                 Cardinal::South if self.grid.height() > start.row + i => {
                     let new_row = start.row + i;
-                    self.grid.locations[new_row][start.col]
+                    cost += self.grid.locations[new_row][start.col];
                 }
                 Cardinal::West if start.col >= i => {
                     let new_col = start.col - i;
-                    self.grid.locations[start.row][new_col]
+                    cost += self.grid.locations[start.row][new_col];
                 }
                 Cardinal::East if self.grid.width() > start.col + i => {
                     let new_col = start.col + i;
-                    self.grid.locations[start.row][new_col]
+                    cost += self.grid.locations[start.row][new_col];
                 }
-                _ => 0,
-            })
-            .sum();
+                _ => break,
+            }
+        }
 
-        (min..=max).filter_map(move |i| match dir {
-            Cardinal::North if start.row >= i => {
+        let adjusted_max = match dir {
+            Cardinal::North => max.min(start.row),
+            Cardinal::South => max.min(self.grid.height() - 1 - start.row),
+            Cardinal::West => max.min(start.col),
+            Cardinal::East => max.min(self.grid.width() - 1 - start.col),
+        };
+
+        (min..=adjusted_max).map(move |i| match dir {
+            Cardinal::North => {
                 let new_row = start.row - i;
                 cost += self.grid.locations[new_row][start.col];
-                Some((
+                (
                     Node {
                         location: Location::new(new_row, start.col),
                         orientation: Orientation::Vertical,
                     },
                     cost,
-                ))
+                )
             }
-            Cardinal::South if self.grid.height() > start.row + i => {
+            Cardinal::South => {
                 let new_row = start.row + i;
                 cost += self.grid.locations[new_row][start.col];
-                Some((
+                (
                     Node {
                         location: Location::new(new_row, start.col),
                         orientation: Orientation::Vertical,
                     },
                     cost,
-                ))
+                )
             }
-            Cardinal::West if start.col >= i => {
+            Cardinal::West => {
                 let new_col = start.col - i;
                 cost += self.grid.locations[start.row][new_col];
-                Some((
+                (
                     Node {
                         location: Location::new(start.row, new_col),
                         orientation: Orientation::Horizontal,
                     },
                     cost,
-                ))
+                )
             }
-            Cardinal::East if self.grid.width() > start.col + i => {
+            Cardinal::East => {
                 let new_col = start.col + i;
                 cost += self.grid.locations[start.row][new_col];
-                Some((
+                (
                     Node {
                         location: Location::new(start.row, new_col),
                         orientation: Orientation::Horizontal,
                     },
                     cost,
-                ))
+                )
             }
-            _ => None,
         })
     }
 
