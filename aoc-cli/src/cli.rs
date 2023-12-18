@@ -14,6 +14,7 @@ use cube_conundrum::CubeConundrum;
 use gear_ratios::GearRatios;
 use haunted_wasteland::HauntedWasteland;
 use hot_springs::HotSprings;
+use lavaduct_lagoon::LavaductLagoon;
 use lens_library::LensLibrary;
 use mirage_maintenance::MirageMaintenance;
 use parabolic_reflector_dish::ParabolicReflectorDish;
@@ -198,5 +199,6 @@ generate_cli! {
     (LensLibrary, 15),
     (TheFloorWillBeLava, 16),
     (ClumsyCrucible, 17),
+    (LavaductLagoon, 18),
     // command_marker
 }

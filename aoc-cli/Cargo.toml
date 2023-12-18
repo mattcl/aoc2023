@@ -1,6 +1,6 @@
 [package]
 name = "aoc-cli"
-version = "0.17.3"
+version = "0.18.0"
 authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
 edition = "2021"
 description = "A command line interface for executing Advent of Code solutions."
@@ -33,3 +33,4 @@ parabolic-reflector-dish = { path = "../day-014-parabolic-reflector-dish" }
 lens-library = { path = "../day-015-lens-library" }
 the-floor-will-be-lava = { path = "../day-016-the-floor-will-be-lava" }
 clumsy-crucible = { path = "../day-017-clumsy-crucible" }
+lavaduct-lagoon = { path = "../day-018-lavaduct-lagoon" }

@@ -95,6 +95,7 @@ dependencies = [
  "gear-ratios",
  "haunted-wasteland",
  "hot-springs",
+ "lavaduct-lagoon",
  "lens-library",
  "mirage-maintenance",
  "parabolic-reflector-dish",
@@ -109,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.17.3"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -122,6 +123,7 @@ dependencies = [
  "gear-ratios",
  "haunted-wasteland",
  "hot-springs",
+ "lavaduct-lagoon",
  "lens-library",
  "mirage-maintenance",
  "parabolic-reflector-dish",
@@ -656,6 +658,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cee9c64da59eae3b50095c18d3e74f8b73c0b86d2792824ff01bbce68ba229ca"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "lavaduct-lagoon"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rayon",
+ "rustc-hash",
+ "serde",
 ]
 
 [[package]]

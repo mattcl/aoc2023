@@ -30,3 +30,4 @@ parabolic-reflector-dish = { path = "../day-014-parabolic-reflector-dish" }
 lens-library = { path = "../day-015-lens-library" }
 the-floor-will-be-lava = { path = "../day-016-the-floor-will-be-lava" }
 clumsy-crucible = { path = "../day-017-clumsy-crucible" }
+lavaduct-lagoon = { path = "../day-018-lavaduct-lagoon" }
