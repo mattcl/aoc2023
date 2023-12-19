@@ -165,18 +165,18 @@ dependencies = [
 
 [[package]]
 name = "aoc-directions"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "355374513a1cc3e3d73a9a576f89bf91128e4b03c5e3344ed1b7b4a771043b55"
+checksum = "e0461bf49b1b357bab8bf3ef90a7195ce794fcb8a25d7b864e54e09f2039bb77"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "aoc-geometry"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "b2dd3e2765ab4757d2e69072b78e7024bdec387c3c9cbfb91d062c2d10de2e53"
+checksum = "801a917377c4f3b474cef2620261094401ad94e7e2422cbbd1941fb2fe7358ce"
 dependencies = [
  "aoc-directions",
  "num",
