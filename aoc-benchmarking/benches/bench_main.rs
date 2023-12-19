@@ -1,6 +1,7 @@
 use criterion::criterion_main;
 
 use aoc_benchmarking::aoc_benches;
+use aplenty::Aplenty;
 use camel_cards::CamelCards;
 use clumsy_crucible::ClumsyCrucible;
 use cosmic_expansion::CosmicExpansion;
@@ -138,6 +139,13 @@ aoc_benches! {
         day_018,
         "../day-018-lavaduct-lagoon/input.txt",
         LavaductLagoon,
+        "Part 1",
+        "Part 2"
+    ),
+    (
+        day_019,
+        "../day-019-aplenty/input.txt",
+        Aplenty,
         "Part 1",
         "Part 2"
     ),

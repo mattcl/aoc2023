@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use aoc_plumbing::Problem;
+use aplenty::Aplenty;
 use camel_cards::CamelCards;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, shells::Zsh};
@@ -200,5 +201,6 @@ generate_cli! {
     (TheFloorWillBeLava, 16),
     (ClumsyCrucible, 17),
     (LavaductLagoon, 18),
+    (Aplenty, 19),
     // command_marker
 }

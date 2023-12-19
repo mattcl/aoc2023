@@ -87,6 +87,7 @@ name = "aoc-benchmarking"
 version = "0.1.0"
 dependencies = [
  "aoc-plumbing",
+ "aplenty",
  "camel-cards",
  "clumsy-crucible",
  "cosmic-expansion",
@@ -110,10 +111,11 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.18.0"
+version = "0.19.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
+ "aplenty",
  "camel-cards",
  "clap",
  "clap_complete",
@@ -174,9 +176,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-geometry"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "801a917377c4f3b474cef2620261094401ad94e7e2422cbbd1941fb2fe7358ce"
+checksum = "7838ca9adfbc922e6f90afb7ccdd45f954725435a99998b93ffa590e0250f2fc"
 dependencies = [
  "aoc-directions",
  "num",
@@ -239,6 +241,21 @@ dependencies = [
  "aoc-types",
  "nom",
  "thiserror",
+]
+
+[[package]]
+name = "aplenty"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "xxhash-rust",
 ]
 
 [[package]]
