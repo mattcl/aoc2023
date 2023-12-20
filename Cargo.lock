@@ -102,6 +102,7 @@ dependencies = [
  "parabolic-reflector-dish",
  "pipe-maze",
  "point-of-incidence",
+ "pulse-propagation",
  "scratchcards",
  "the-floor-will-be-lava",
  "trebuchet",
@@ -111,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -131,6 +132,7 @@ dependencies = [
  "parabolic-reflector-dish",
  "pipe-maze",
  "point-of-incidence",
+ "pulse-propagation",
  "scratchcards",
  "serde",
  "serde_json",
@@ -974,6 +976,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39278fbbf5fb4f646ce651690877f89d1c5811a3d4acb27700c1cb3cdb78fd3b"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "pulse-propagation"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "xxhash-rust",
 ]
 
 [[package]]

@@ -32,3 +32,4 @@ the-floor-will-be-lava = { path = "../day-016-the-floor-will-be-lava" }
 clumsy-crucible = { path = "../day-017-clumsy-crucible" }
 lavaduct-lagoon = { path = "../day-018-lavaduct-lagoon" }
 aplenty = { path = "../day-019-aplenty" }
+pulse-propagation = { path = "../day-020-pulse-propagation" }

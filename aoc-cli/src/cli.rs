@@ -21,6 +21,7 @@ use mirage_maintenance::MirageMaintenance;
 use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
+use pulse_propagation::PulsePropagation;
 use scratchcards::Scratchcards;
 use the_floor_will_be_lava::TheFloorWillBeLava;
 use trebuchet::Trebuchet;
@@ -202,5 +203,6 @@ generate_cli! {
     (ClumsyCrucible, 17),
     (LavaductLagoon, 18),
     (Aplenty, 19),
+    (PulsePropagation, 20),
     // command_marker
 }
