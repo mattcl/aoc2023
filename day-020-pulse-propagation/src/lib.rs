@@ -32,11 +32,6 @@ pub enum CommMod {
     Broadcast {
         destinations: Vec<u64>,
     },
-    CycleConjunction {
-        inputs: FxHashMap<u64, Pulse>,
-        cycle_markers: FxHashMap<u64, Vec<usize>>,
-        destinations: Vec<u64>,
-    },
 }
 
 impl CommMod {
@@ -45,7 +40,6 @@ impl CommMod {
             Self::FlipFlop { destinations, .. } => destinations,
             Self::Conjunction { destinations, .. } => destinations,
             Self::Broadcast { destinations } => destinations,
-            Self::CycleConjunction { destinations, .. } => destinations,
         }
     }
 }
@@ -144,11 +138,8 @@ impl PulsePropagation {
         let mut pulses = VecDeque::default();
 
         for _ in 0..1000 {
-            pulses.clear();
             pulses.push_back((button, broadcaster, Pulse::Low));
             low_pulses += 1;
-            let mut high_this_cycle = 0;
-            let mut low_this_cycle = 0;
             while let Some((origin, dest, pulse)) = pulses.pop_front() {
                 if let Some(cur_mod) = mods.get_mut(&dest) {
                     match cur_mod {
@@ -162,10 +153,10 @@ impl PulsePropagation {
 
                             *state = !*state;
                             let next_pulse = if *state {
-                                high_this_cycle += destinations.len();
+                                high_pulses += destinations.len();
                                 Pulse::High
                             } else {
-                                low_this_cycle += destinations.len();
+                                low_pulses += destinations.len();
                                 Pulse::Low
                             };
 
@@ -180,10 +171,10 @@ impl PulsePropagation {
                             inputs.insert(origin, pulse);
 
                             let next_pulse = if inputs.values().all(|v| *v == Pulse::High) {
-                                low_this_cycle += destinations.len();
+                                low_pulses += destinations.len();
                                 Pulse::Low
                             } else {
-                                high_this_cycle += destinations.len();
+                                high_pulses += destinations.len();
                                 Pulse::High
                             };
 
@@ -193,18 +184,15 @@ impl PulsePropagation {
                         }
                         CommMod::Broadcast { destinations } => {
                             if pulse == Pulse::High {
-                                high_this_cycle += destinations.len();
+                                high_pulses += destinations.len();
                             } else {
-                                low_this_cycle += destinations.len();
+                                low_pulses += destinations.len();
                             }
                             pulses.extend(destinations.iter().copied().map(|d| (dest, d, pulse)));
                         }
-                        _ => unreachable!(),
                     }
                 }
             }
-            low_pulses += low_this_cycle;
-            high_pulses += high_this_cycle;
         }
 
         low_pulses * high_pulses
@@ -216,34 +204,21 @@ impl PulsePropagation {
         let button = xxh3_64(b"button");
         let mut mods = self.mods.clone();
 
-        // replace the -> rx conjunction with the cycle variant
-        let original = self.mods.get(&self.cycle_conjunction_key).unwrap();
-
-        let replacement = match original {
-            CommMod::Conjunction {
-                inputs,
-                destinations,
-            } => {
-                let mut cycle_markers = FxHashMap::default();
+        let rx_conjunction = self.mods.get(&self.cycle_conjunction_key).unwrap();
+        let mut cycle_markers = FxHashMap::default();
+        match rx_conjunction {
+            CommMod::Conjunction { inputs, .. } => {
                 for k in inputs.keys() {
                     cycle_markers.insert(*k, Vec::default());
                 }
-                CommMod::CycleConjunction {
-                    inputs: inputs.clone(),
-                    cycle_markers,
-                    destinations: destinations.clone(),
-                }
             }
-            _ => unreachable!(),
-        };
-
-        mods.insert(self.cycle_conjunction_key, replacement);
+            _ => unreachable!("We should only have attempted to get a conjunction"),
+        }
 
         let mut count = 0;
         let mut pulses = VecDeque::default();
 
         loop {
-            pulses.clear();
             pulses.push_back((button, broadcaster, Pulse::Low));
             while let Some((origin, dest, pulse)) = pulses.pop_front() {
                 if dest == rx && pulse == Pulse::Low {
@@ -272,27 +247,7 @@ impl PulsePropagation {
                         } => {
                             inputs.insert(origin, pulse);
 
-                            let next_pulse = if inputs.values().all(|v| *v == Pulse::High) {
-                                Pulse::Low
-                            } else {
-                                Pulse::High
-                            };
-
-                            pulses.extend(
-                                destinations.iter().copied().map(|d| (dest, d, next_pulse)),
-                            );
-                        }
-                        CommMod::Broadcast { destinations } => {
-                            pulses.extend(destinations.iter().copied().map(|d| (dest, d, pulse)));
-                        }
-                        CommMod::CycleConjunction {
-                            inputs,
-                            cycle_markers,
-                            destinations,
-                        } => {
-                            inputs.insert(origin, pulse);
-
-                            if pulse == Pulse::High {
+                            if dest == self.cycle_conjunction_key && pulse == Pulse::High {
                                 let e = cycle_markers.entry(origin).or_default();
                                 e.push(count + 1);
 
@@ -314,6 +269,9 @@ impl PulsePropagation {
                             pulses.extend(
                                 destinations.iter().copied().map(|d| (dest, d, next_pulse)),
                             );
+                        }
+                        CommMod::Broadcast { destinations } => {
+                            pulses.extend(destinations.iter().copied().map(|d| (dest, d, pulse)));
                         }
                     }
                 }
