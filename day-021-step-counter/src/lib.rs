@@ -21,30 +21,43 @@ pub struct StepCounter {
 
 impl StepCounter {
     pub fn bfs(&self, steps: usize) -> usize {
-        // let mut seen = FxHashSet::default();
+        let mut seen_odd = FxHashSet::default();
+        let mut seen_even = FxHashSet::default();
         let mut cur = FxHashSet::default();
         let mut next = FxHashSet::default();
 
         cur.insert(self.start);
 
-        for _ in 0..steps {
+        for step in 0..steps {
             for loc in cur.drain() {
-                for (_, next_loc, _) in self
-                    .grid
-                    .cardinal_neighbors(&loc)
-                    .filter(|(_, _, t)| **t == Tile::Garden)
-                {
+                if step % 2 == 0 {
+                    if seen_even.contains(&loc) {
+                        continue;
+                    }
+                    seen_even.insert(loc);
+                } else {
+                    if seen_odd.contains(&loc) {
+                        continue;
+                    }
+                    seen_odd.insert(loc);
+                }
+                for (_, next_loc, _) in self.grid.cardinal_neighbors(&loc).filter(|(_, l, t)| {
+                    **t == Tile::Garden
+                        && ((step % 2 == 0 && !seen_odd.contains(l))
+                            || (step % 2 == 1 && !seen_even.contains(l)))
+                }) {
                     next.insert(next_loc);
                 }
             }
             std::mem::swap(&mut cur, &mut next);
         }
 
-        cur.len()
+        cur.len() + seen_even.len()
     }
 
     pub fn infinite_bfs(&self, steps: usize) -> i64 {
-        // let mut seen = FxHashSet::default();
+        let mut seen_odd = FxHashSet::default();
+        let mut seen_even = FxHashSet::default();
         let mut cur = FxHashSet::default();
         let mut next = FxHashSet::default();
 
@@ -60,7 +73,12 @@ impl StepCounter {
 
         for step in 0..steps {
             if step % self.grid.width() == rem {
-                counts.push(cur.len());
+                let prev = if step % 2 == 0 {
+                    seen_even.len()
+                } else {
+                    seen_odd.len()
+                };
+                counts.push(cur.len() + prev);
 
                 if counts.len() == 3 {
                     break;
@@ -68,12 +86,26 @@ impl StepCounter {
             }
 
             for loc in cur.drain() {
+                if step % 2 == 0 {
+                    if seen_even.contains(&loc) {
+                        continue;
+                    }
+                    seen_even.insert(loc);
+                } else {
+                    if seen_odd.contains(&loc) {
+                        continue;
+                    }
+                    seen_odd.insert(loc);
+                }
+
                 next.extend(
                     loc.cardinal_neighbors()
                         .filter(|(_, l)| {
                             let row = l.x.rem_euclid(self.grid.height() as i64) as usize;
                             let col = l.y.rem_euclid(self.grid.width() as i64) as usize;
                             self.grid.locations[row][col] == Tile::Garden
+                                && ((step % 2 == 0 && !seen_odd.contains(l))
+                                    || (step % 2 == 1 && !seen_even.contains(l)))
                         })
                         .map(|(_, l)| l),
                 );
