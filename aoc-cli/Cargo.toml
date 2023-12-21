@@ -1,6 +1,6 @@
 [package]
 name = "aoc-cli"
-version = "0.21.0"
+version = "0.21.1"
 authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
 edition = "2021"
 description = "A command line interface for executing Advent of Code solutions."

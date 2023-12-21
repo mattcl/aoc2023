@@ -23,13 +23,13 @@ impl StepCounter {
     pub fn bfs(&self, steps: usize) -> usize {
         let mut seen_odd = FxHashSet::default();
         let mut seen_even = FxHashSet::default();
-        let mut cur = FxHashSet::default();
-        let mut next = FxHashSet::default();
+        let mut cur = Vec::default();
+        let mut next = Vec::default();
 
-        cur.insert(self.start);
+        cur.push(self.start);
 
         for step in 0..steps {
-            for loc in cur.drain() {
+            for loc in cur.drain(..) {
                 if step % 2 == 0 {
                     if seen_even.contains(&loc) {
                         continue;
@@ -41,25 +41,31 @@ impl StepCounter {
                     }
                     seen_odd.insert(loc);
                 }
-                for (_, next_loc, _) in self.grid.cardinal_neighbors(&loc).filter(|(_, l, t)| {
-                    **t == Tile::Garden
-                        && ((step % 2 == 0 && !seen_odd.contains(l))
-                            || (step % 2 == 1 && !seen_even.contains(l)))
-                }) {
-                    next.insert(next_loc);
-                }
+                next.extend(self.grid.cardinal_neighbors(&loc).filter_map(|(_, l, t)| {
+                    if *t == Tile::Garden
+                        && ((step % 2 == 0 && !seen_odd.contains(&l))
+                            || (step % 2 == 1 && !seen_even.contains(&l)))
+                    {
+                        Some(l)
+                    } else {
+                        None
+                    }
+                }));
             }
             std::mem::swap(&mut cur, &mut next);
         }
 
-        cur.len() + seen_even.len()
+        // it's actually faster to just remove the duplicates here than it is
+        // for cur and next to be hashsets
+        let unique = FxHashSet::from_iter(cur);
+        unique.len() + seen_even.len()
     }
 
     pub fn infinite_bfs(&self, steps: usize) -> i64 {
         let mut seen_odd = FxHashSet::default();
         let mut seen_even = FxHashSet::default();
-        let mut cur = FxHashSet::default();
-        let mut next = FxHashSet::default();
+        let mut cur = Vec::default();
+        let mut next = Vec::default();
 
         // directions will have different meanings, but the same effects, even
         // if tranversal order is different
@@ -67,7 +73,7 @@ impl StepCounter {
 
         let mut counts = vec![];
 
-        cur.insert(start);
+        cur.push(start);
 
         let rem = steps % self.grid.width();
 
@@ -78,14 +84,17 @@ impl StepCounter {
                 } else {
                     seen_odd.len()
                 };
-                counts.push(cur.len() + prev);
+                // it's actually faster to just remove the duplicates whenever
+                // we're inserting than it is for cur and next to be hashsets
+                let unique = FxHashSet::from_iter(cur.iter());
+                counts.push(unique.len() + prev);
 
                 if counts.len() == 3 {
                     break;
                 }
             }
 
-            for loc in cur.drain() {
+            for loc in cur.drain(..) {
                 if step % 2 == 0 {
                     if seen_even.contains(&loc) {
                         continue;
@@ -98,17 +107,18 @@ impl StepCounter {
                     seen_odd.insert(loc);
                 }
 
-                next.extend(
-                    loc.cardinal_neighbors()
-                        .filter(|(_, l)| {
-                            let row = l.x.rem_euclid(self.grid.height() as i64) as usize;
-                            let col = l.y.rem_euclid(self.grid.width() as i64) as usize;
-                            self.grid.locations[row][col] == Tile::Garden
-                                && ((step % 2 == 0 && !seen_odd.contains(l))
-                                    || (step % 2 == 1 && !seen_even.contains(l)))
-                        })
-                        .map(|(_, l)| l),
-                );
+                next.extend(loc.cardinal_neighbors().filter_map(|(_, l)| {
+                    let row = l.x.rem_euclid(self.grid.height() as i64) as usize;
+                    let col = l.y.rem_euclid(self.grid.width() as i64) as usize;
+                    if self.grid.locations[row][col] == Tile::Garden
+                        && ((step % 2 == 0 && !seen_odd.contains(&l))
+                            || (step % 2 == 1 && !seen_even.contains(&l)))
+                    {
+                        Some(l)
+                    } else {
+                        None
+                    }
+                }));
             }
 
             std::mem::swap(&mut cur, &mut next);
