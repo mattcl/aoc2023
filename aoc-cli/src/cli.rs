@@ -23,6 +23,7 @@ use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use pulse_propagation::PulsePropagation;
 use scratchcards::Scratchcards;
+use step_counter::StepCounter;
 use the_floor_will_be_lava::TheFloorWillBeLava;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -204,5 +205,6 @@ generate_cli! {
     (LavaductLagoon, 18),
     (Aplenty, 19),
     (PulsePropagation, 20),
+    (StepCounter, 21),
     // command_marker
 }

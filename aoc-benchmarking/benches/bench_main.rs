@@ -17,6 +17,7 @@ use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use pulse_propagation::PulsePropagation;
 use scratchcards::Scratchcards;
+use step_counter::StepCounter;
 use the_floor_will_be_lava::TheFloorWillBeLava;
 use trebuchet::Trebuchet;
 use wait_for_it::WaitForIt;
@@ -154,6 +155,13 @@ aoc_benches! {
         day_020,
         "../day-020-pulse-propagation/input.txt",
         PulsePropagation,
+        "Part 1",
+        "Part 2"
+    ),
+    (
+        day_021,
+        "../day-021-step-counter/input.txt",
+        StepCounter,
         "Part 1",
         "Part 2"
     ),

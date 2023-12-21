@@ -104,6 +104,7 @@ dependencies = [
  "point-of-incidence",
  "pulse-propagation",
  "scratchcards",
+ "step-counter",
  "the-floor-will-be-lava",
  "trebuchet",
  "wait-for-it",
@@ -112,7 +113,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "anyhow",
  "aoc-plumbing",
@@ -136,6 +137,7 @@ dependencies = [
  "scratchcards",
  "serde",
  "serde_json",
+ "step-counter",
  "the-floor-will-be-lava",
  "trebuchet",
  "wait-for-it",
@@ -1162,6 +1164,21 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "step-counter"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "xxhash-rust",
 ]
 
 [[package]]
