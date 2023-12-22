@@ -1,8 +1,7 @@
-use std::str::FromStr;
+use std::{collections::BTreeSet, str::FromStr};
 
 use aoc_plumbing::Problem;
 use aoc_std::geometry::{Intersect, Point3D, Rectangle};
-use itertools::Itertools;
 use nom::{
     character::complete::{self, newline},
     combinator,
@@ -10,6 +9,7 @@ use nom::{
     sequence::{separated_pair, tuple},
     IResult,
 };
+use rayon::prelude::*;
 use rustc_hash::FxHashSet;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
@@ -68,6 +68,27 @@ fn parse_bricks(input: &str) -> IResult<&str, Vec<Brick>> {
     separated_list1(newline, parse_brick)(input)
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct StableEntry {
+    index: usize,
+    z_height: i64,
+}
+
+impl Ord for StableEntry {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other
+            .z_height
+            .cmp(&self.z_height)
+            .then_with(|| self.index.cmp(&other.index))
+    }
+}
+
+impl PartialOrd for StableEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SandSlabs {
     p1: usize,
@@ -77,7 +98,7 @@ pub struct SandSlabs {
 impl SandSlabs {
     pub fn settle(bricks: Vec<Brick>) -> (usize, usize) {
         let mut bricks = bricks;
-        let mut stable_bricks: Vec<usize> = Vec::with_capacity(bricks.len());
+        let mut stable_bricks: BTreeSet<StableEntry> = BTreeSet::default();
         let mut above: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
         let mut below: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
 
@@ -85,42 +106,36 @@ impl SandSlabs {
             let brick = bricks[i];
 
             if brick.start.z > 1 {
-                let mut prev = -1;
-                for (colliding_height, colliding_brick) in stable_bricks
-                    .iter()
-                    // on average, we're hoping to be able to set prev sooner to
-                    // avoid having to do the more expensive collision checking
-                    .rev()
-                    .filter_map(|b| {
-                        let cur_b = bricks[*b];
-                        let next_z = cur_b.end.z + 1;
-                        if next_z >= prev && cur_b.z_collision_with(&brick) {
-                            if next_z > prev {
-                                prev = next_z;
+                let mut max_height = -1;
+                for entry in stable_bricks.iter() {
+                    let cur_b = bricks[entry.index];
+                    let next_z = entry.z_height + 1;
+
+                    if next_z >= max_height {
+                        if cur_b.z_collision_with(&brick) {
+                            if max_height == -1 {
+                                max_height = next_z;
                             }
-                            Some((next_z, *b))
-                        } else {
-                            None
+
+                            above[entry.index].push(i);
+                            below[i].push(entry.index);
                         }
-                    })
-                    .sorted_by(|a, b| b.0.cmp(&a.0))
-                {
-                    if prev == colliding_height {
-                        above[colliding_brick].push(i);
-                        below[i].push(colliding_brick);
                     } else {
                         break;
                     }
                 }
 
-                if prev == -1 {
+                if max_height == -1 {
                     bricks[i].set_z(1);
                 } else {
-                    bricks[i].set_z(prev);
+                    bricks[i].set_z(max_height);
                 }
             }
 
-            stable_bricks.push(i);
+            stable_bricks.insert(StableEntry {
+                index: i,
+                z_height: bricks[i].end.z,
+            });
         }
 
         let required = FxHashSet::from_iter(below.iter().filter(|b| b.len() == 1).map(|v| v[0]));
@@ -128,7 +143,7 @@ impl SandSlabs {
         let p1 = bricks.len() - required.len();
 
         let p2 = required
-            .into_iter()
+            .into_par_iter()
             .map(|i| Self::search(i, &above, &below))
             .sum();
 
