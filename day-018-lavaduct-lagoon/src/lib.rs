@@ -1,8 +1,10 @@
 use std::str::FromStr;
 
 use aoc_plumbing::Problem;
-use aoc_std::{directions::Relative, geometry::Point2D};
-use itertools::Itertools;
+use aoc_std::{
+    directions::Relative,
+    geometry::{Point2D, Polygon},
+};
 use nom::{
     bytes::complete::{tag, take_while_m_n},
     character::complete::{self, newline, one_of},
@@ -69,10 +71,13 @@ impl LavaductLagoon {
     pub fn make_veritices<'a, I: Iterator<Item = &'a Instruction>>(
         &self,
         iter: I,
-    ) -> (i64, Vec<Point2D<i64>>) {
+    ) -> (i64, Polygon<i64>) {
         let mut verticies: Vec<Point2D<i64>> = Vec::with_capacity(self.instructions.len() + 1);
         let mut cur: Point2D<i64> = Point2D::default();
 
+        // the polygon can caluclate the perimeter after the fact, but, since
+        // we have to actually walk the edge here, we might as well calculate
+        // it here to save another iteration through the verticies
         let mut perimeter = 0;
         for inst in iter {
             match inst.direction {
@@ -86,26 +91,15 @@ impl LavaductLagoon {
             perimeter += inst.amount;
         }
 
-        (perimeter, verticies)
+        (perimeter, Polygon::new(verticies))
     }
 
     pub fn dig<'a, I: Iterator<Item = &'a Instruction>>(&self, iter: I) -> i64 {
-        let (perimeter, verticies) = self.make_veritices(iter);
-        let area = self.area_from_verticies(&verticies);
+        let (perimeter, polygon) = self.make_veritices(iter);
+        let area = polygon.shoelace_area();
 
         let inside = area - perimeter / 2 + 1;
         perimeter + inside
-    }
-
-    // shoelace
-    pub fn area_from_verticies(&self, verticies: &[Point2D<i64>]) -> i64 {
-        verticies
-            .iter()
-            .tuple_windows()
-            .map(|(a, b)| a.y * b.x - a.x * b.y)
-            .sum::<i64>()
-            .abs()
-            / 2
     }
 }
 
