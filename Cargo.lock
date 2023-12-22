@@ -181,9 +181,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-geometry"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "7838ca9adfbc922e6f90afb7ccdd45f954725435a99998b93ffa590e0250f2fc"
+checksum = "aa4f916c2266e09b1f29f6887c1804ba4bcc3dd3a85b7a99ef7503190b5a45e0"
 dependencies = [
  "aoc-directions",
  "num",
