@@ -34,3 +34,4 @@ lavaduct-lagoon = { path = "../day-018-lavaduct-lagoon" }
 aplenty = { path = "../day-019-aplenty" }
 pulse-propagation = { path = "../day-020-pulse-propagation" }
 step-counter = { path = "../day-021-step-counter" }
+sand-slabs = { path = "../day-022-sand-slabs" }

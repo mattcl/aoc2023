@@ -22,6 +22,7 @@ use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use pulse_propagation::PulsePropagation;
+use sand_slabs::SandSlabs;
 use scratchcards::Scratchcards;
 use step_counter::StepCounter;
 use the_floor_will_be_lava::TheFloorWillBeLava;
@@ -206,5 +207,6 @@ generate_cli! {
     (Aplenty, 19),
     (PulsePropagation, 20),
     (StepCounter, 21),
+    (SandSlabs, 22),
     // command_marker
 }

@@ -16,6 +16,7 @@ use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
 use pulse_propagation::PulsePropagation;
+use sand_slabs::SandSlabs;
 use scratchcards::Scratchcards;
 use step_counter::StepCounter;
 use the_floor_will_be_lava::TheFloorWillBeLava;
@@ -164,6 +165,12 @@ aoc_benches! {
         StepCounter,
         "Part 1",
         "Part 2"
+    ),
+    (
+        day_022,
+        "../day-022-sand-slabs/input.txt",
+        SandSlabs,
+        "Combined (including parsing)"
     ),
     // bench_marker
 }
