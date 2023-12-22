@@ -78,9 +78,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.75"
+version = "1.0.76"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
+checksum = "59d2a3357dde987206219e78ecfbbb6e8dad06cbb65292758d3270e6254f7355"
 
 [[package]]
 name = "aoc-benchmarking"
@@ -162,11 +162,12 @@ dependencies = [
 
 [[package]]
 name = "aoc-conversions"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "0ff07a6eac0d2b5c772b3d411dc5aab0f0e86f96dacbded560715468bb91a9f2"
+checksum = "84ee4f0f990124d2179e31dbe3c0c0e9616f5934ea3a6974ac3ef568299bd643"
 dependencies = [
  "thiserror",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -213,9 +214,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-std"
-version = "0.3.10"
+version = "0.3.11"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "a41cc12130ede1d61765d31c62a6e8a98d8262d7a1e16465aee50a32d0f398dc"
+checksum = "a490ba01bb9dc649f4e743fbd32e8b1c78cd1b6c799a8f2836d38340409a136f"
 dependencies = [
  "aoc-collections",
  "aoc-conversions",
@@ -973,9 +974,9 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.70"
+version = "1.0.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39278fbbf5fb4f646ce651690877f89d1c5811a3d4acb27700c1cb3cdb78fd3b"
+checksum = "75cb1540fadbd5b8fbccc4dddad2734eba435053f725621c070711a14bb5f4b8"
 dependencies = [
  "unicode-ident",
 ]
@@ -1189,9 +1190,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "syn"
-version = "2.0.41"
+version = "2.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c8b28c477cc3bf0e7966561e3460130e1255f7a1cf71931075f1c5e7a7e269"
+checksum = "5b7d0a2c048d661a1a59fcd7355baa232f7ed34e0ee4df2eef3c1c1c0d3852d8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1552,9 +1553,9 @@ dependencies = [
 
 [[package]]
 name = "xxhash-rust"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9828b178da53440fa9c766a3d2f73f7cf5d0ac1fe3980c1e5018d899fd19e07b"
+checksum = "53be06678ed9e83edb1745eb72efc0bbcd7b5c3c35711a860906aed827a13d61"
 
 [[package]]
 name = "you-give-a-seed-a-fertilizer"
