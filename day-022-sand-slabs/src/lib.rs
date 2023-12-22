@@ -1,7 +1,7 @@
 use std::{collections::BTreeSet, str::FromStr};
 
 use aoc_plumbing::Problem;
-use aoc_std::geometry::{Intersect, Point3D, Rectangle};
+use aoc_std::geometry::{Cube, Intersect, Point3D, Rectangle};
 use nom::{
     character::complete::{self, newline},
     combinator,
@@ -12,31 +12,25 @@ use nom::{
 use rayon::prelude::*;
 use rustc_hash::FxHashSet;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Brick {
-    start: Point3D<i64>,
-    end: Point3D<i64>,
+    cube: Cube<i64>,
     horiz_rect: Rectangle<i64>,
 }
 
 impl Brick {
     pub fn new(p1: Point3D<i64>, p2: Point3D<i64>) -> Self {
-        let start = p1.min(p2);
-        let end = p2.max(p1);
+        let cube = Cube::new(p1, p2);
+        // we'll just store this instead of having to compute it each collision
+        // check
+        let horiz_rect = cube.xy_face();
 
-        let horiz_rect = Rectangle::from_raw(start.x, start.y, end.x, end.y);
-
-        Self {
-            start,
-            end,
-            horiz_rect,
-        }
+        Self { cube, horiz_rect }
     }
 
     pub fn set_z(&mut self, value: i64) {
-        let delta = self.start.z - value;
-        self.start.z = value;
-        self.end.z -= delta;
+        let delta = value - self.cube.start.z;
+        self.cube.translate_z(delta);
     }
 
     pub fn z_collision_with(&self, other: &Self) -> bool {
@@ -105,7 +99,7 @@ impl SandSlabs {
         for i in 0..bricks.len() {
             let brick = bricks[i];
 
-            if brick.start.z > 1 {
+            if brick.cube.start.z > 1 {
                 let mut max_height = -1;
                 for entry in stable_bricks.iter() {
                     let cur_b = bricks[entry.index];
@@ -134,7 +128,7 @@ impl SandSlabs {
 
             stable_bricks.insert(StableEntry {
                 index: i,
-                z_height: bricks[i].end.z,
+                z_height: bricks[i].cube.end.z,
             });
         }
 
@@ -180,7 +174,7 @@ impl FromStr for SandSlabs {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (_, mut bricks) = parse_bricks(s).map_err(|e| e.to_owned())?;
-        bricks.sort_by(|a, b| a.start.z.cmp(&b.start.z));
+        bricks.sort_by(|a, b| a.cube.start.z.cmp(&b.cube.start.z));
 
         let (p1, p2) = Self::settle(bricks);
         Ok(Self { p1, p2 })
