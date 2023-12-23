@@ -3,6 +3,7 @@ use std::{hash::Hash, str::FromStr, sync::Arc, thread};
 use anyhow::anyhow;
 use aoc_plumbing::Problem;
 use aoc_std::{collections::Grid, directions::Cardinal, geometry::Location};
+use rayon::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -95,8 +96,15 @@ impl ALongWalk {
 
         // for each neighbor, pathfind to its neighbors in each direction
         let junction_locations = graph.keys().copied().collect::<Vec<_>>();
-        for loc in junction_locations {
-            let neighbors = Self::explore_to_neighbors_with_slopes(loc, &graph, grid);
+        let results = junction_locations
+            .into_par_iter()
+            .map(|loc| {
+                let neighbors = Self::explore_to_neighbors_with_slopes(loc, &graph, grid);
+                (loc, neighbors)
+            })
+            .collect::<Vec<_>>();
+
+        for (loc, neighbors) in results {
             let n = graph.get_mut(&loc).unwrap();
             n.neighbors = neighbors;
         }
@@ -112,8 +120,15 @@ impl ALongWalk {
 
         // for each neighbor, pathfind to its neighbors in each direction
         let junction_locations = graph.keys().copied().collect::<Vec<_>>();
-        for loc in junction_locations {
-            let neighbors = Self::explore_to_neighbors_without_slopes(loc, &graph, grid);
+        let results = junction_locations
+            .into_par_iter()
+            .map(|loc| {
+                let neighbors = Self::explore_to_neighbors_without_slopes(loc, &graph, grid);
+                (loc, neighbors)
+            })
+            .collect::<Vec<_>>();
+
+        for (loc, neighbors) in results {
             let n = graph.get_mut(&loc).unwrap();
             n.neighbors = neighbors;
         }
@@ -218,12 +233,12 @@ impl ALongWalk {
         seen: &mut FxHashSet<Location>,
         longest: &mut usize,
     ) {
-        if start == goal {
-            *longest = (*longest).max(cur_cost);
+        if seen.contains(start) {
             return;
         }
 
-        if seen.contains(start) {
+        if start == goal {
+            *longest = (*longest).max(cur_cost);
             return;
         }
 
