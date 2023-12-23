@@ -30,14 +30,16 @@ impl Tile {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
+    idx: usize,
     location: Location,
     tile: Tile,
-    neighbors: Vec<(Location, usize)>,
+    neighbors: Vec<(usize, usize)>,
 }
 
 impl Node {
-    pub fn new(location: Location, tile: Tile) -> Self {
+    pub fn new(idx: usize, location: Location, tile: Tile) -> Self {
         Self {
+            idx,
             location,
             tile,
             neighbors: Vec::default(),
@@ -52,18 +54,19 @@ pub struct ALongWalk {
 }
 
 impl ALongWalk {
-    pub fn make_base_graph(grid: &Grid<Tile>) -> FxHashMap<Location, Node> {
-        let mut graph: FxHashMap<Location, Node> = FxHashMap::default();
+    pub fn make_base_graph(grid: &Grid<Tile>) -> Vec<Node> {
+        let mut graph: Vec<Node> = Vec::default();
 
-        let start = Node::new(Location::new(0, 1), Tile::Empty);
+        let start = Node::new(0, Location::new(0, 1), Tile::Empty);
 
         let end = Node::new(
+            1,
             Location::new(grid.height() - 1, grid.width() - 2),
             Tile::Empty,
         );
 
-        graph.insert(Location::new(0, 1), start);
-        graph.insert(Location::new(grid.height() - 1, grid.width() - 2), end);
+        graph.push(start);
+        graph.push(end);
 
         // add all the nodes to the graph that have more than two neighbors as
         // these are now junction points
@@ -79,7 +82,7 @@ impl ALongWalk {
                         .count()
                         > 2
                     {
-                        graph.insert(loc, Node::new(loc, tile));
+                        graph.push(Node::new(graph.len(), loc, tile));
                     }
                 }
             }
@@ -88,61 +91,66 @@ impl ALongWalk {
         graph
     }
 
-    pub fn populate_graph_with_slopes(
-        base_graph: &FxHashMap<Location, Node>,
-        grid: &Grid<Tile>,
-    ) -> FxHashMap<Location, Node> {
-        let mut graph = base_graph.clone();
+    pub fn populate_graph_with_slopes(base_graph: &[Node], grid: &Grid<Tile>) -> Vec<Node> {
+        let mut graph = base_graph.to_owned();
+        let mut translation = FxHashMap::default();
+
+        for n in graph.iter() {
+            translation.insert(n.location, n.idx);
+        }
 
         // for each neighbor, pathfind to its neighbors in each direction
-        let junction_locations = graph.keys().copied().collect::<Vec<_>>();
-        let results = junction_locations
+        let results = (0..graph.len())
             .into_par_iter()
-            .map(|loc| {
-                let neighbors = Self::explore_to_neighbors_with_slopes(loc, &graph, grid);
-                (loc, neighbors)
+            .map(|idx| {
+                let neighbors =
+                    Self::explore_to_neighbors_with_slopes(idx, &graph, &translation, grid);
+                (idx, neighbors)
             })
             .collect::<Vec<_>>();
 
-        for (loc, neighbors) in results {
-            let n = graph.get_mut(&loc).unwrap();
-            n.neighbors = neighbors;
+        for (idx, neighbors) in results {
+            graph[idx].neighbors = neighbors;
         }
 
         graph
     }
 
-    pub fn populate_graph_without_slopes(
-        base_graph: &FxHashMap<Location, Node>,
-        grid: &Grid<Tile>,
-    ) -> FxHashMap<Location, Node> {
-        let mut graph = base_graph.clone();
+    pub fn populate_graph_without_slopes(base_graph: &[Node], grid: &Grid<Tile>) -> Vec<Node> {
+        let mut graph = base_graph.to_owned();
+        let mut translation = FxHashMap::default();
+
+        for n in graph.iter() {
+            translation.insert(n.location, n.idx);
+        }
 
         // for each neighbor, pathfind to its neighbors in each direction
-        let junction_locations = graph.keys().copied().collect::<Vec<_>>();
-        let results = junction_locations
+        let results = (0..graph.len())
             .into_par_iter()
-            .map(|loc| {
-                let neighbors = Self::explore_to_neighbors_without_slopes(loc, &graph, grid);
-                (loc, neighbors)
+            .map(|idx| {
+                let neighbors =
+                    Self::explore_to_neighbors_without_slopes(idx, &graph, &translation, grid);
+                (idx, neighbors)
             })
             .collect::<Vec<_>>();
 
-        for (loc, neighbors) in results {
-            let n = graph.get_mut(&loc).unwrap();
-            n.neighbors = neighbors;
+        for (idx, neighbors) in results {
+            graph[idx].neighbors = neighbors;
         }
 
         graph
     }
 
     pub fn explore_to_neighbors_with_slopes(
-        start: Location,
-        graph: &FxHashMap<Location, Node>,
+        idx: usize,
+        graph: &[Node],
+        translation: &FxHashMap<Location, usize>,
         grid: &Grid<Tile>,
-    ) -> Vec<(Location, usize)> {
+    ) -> Vec<(usize, usize)> {
         let mut out = Vec::default();
         let mut seen: FxHashSet<Location> = FxHashSet::default();
+
+        let start = graph[idx].location;
 
         let mut cur = vec![(start, 0)];
         let mut next: Vec<(Location, usize)> = Vec::default();
@@ -161,8 +169,9 @@ impl ALongWalk {
                     .cardinal_neighbors(&loc)
                     .filter(|(d, _, t)| **t != Tile::Wall && tile.permitted(d))
                 {
-                    if l != start && graph.contains_key(&l) {
-                        out.push((l, dist + 1));
+                    if l != start && translation.contains_key(&l) {
+                        let n_idx = translation.get(&l).unwrap();
+                        out.push((*n_idx, dist + 1));
                     } else {
                         next.push((l, dist + 1));
                     }
@@ -176,12 +185,15 @@ impl ALongWalk {
     }
 
     pub fn explore_to_neighbors_without_slopes(
-        start: Location,
-        graph: &FxHashMap<Location, Node>,
+        idx: usize,
+        graph: &[Node],
+        translation: &FxHashMap<Location, usize>,
         grid: &Grid<Tile>,
-    ) -> Vec<(Location, usize)> {
+    ) -> Vec<(usize, usize)> {
         let mut out = Vec::default();
         let mut seen: FxHashSet<Location> = FxHashSet::default();
+
+        let start = graph[idx].location;
 
         let mut cur = vec![(start, 0)];
         let mut next: Vec<(Location, usize)> = Vec::default();
@@ -198,8 +210,9 @@ impl ALongWalk {
                     .cardinal_neighbors(&loc)
                     .filter(|(_, _, t)| **t != Tile::Wall)
                 {
-                    if l != start && graph.contains_key(&l) {
-                        out.push((l, dist + 1));
+                    if l != start && translation.contains_key(&l) {
+                        let n_idx = translation.get(&l).unwrap();
+                        out.push((*n_idx, dist + 1));
                     } else {
                         next.push((l, dist + 1));
                     }
@@ -212,28 +225,28 @@ impl ALongWalk {
         out
     }
 
-    pub fn longest_distance(
-        start: Location,
-        end: Location,
-        graph: &FxHashMap<Location, Node>,
-    ) -> usize {
-        let mut seen = FxHashSet::default();
+    pub fn longest_distance(graph: &[Node]) -> usize {
         let mut longest = 0;
 
-        Self::longest_recur(&start, 0, &end, graph, &mut seen, &mut longest);
+        // our start node is 0, our end is 1
+        Self::longest_recur(0, 0, 1, graph, 0, &mut longest);
 
         longest
     }
 
     pub fn longest_recur(
-        start: &Location,
+        start: usize,
         cur_cost: usize,
-        goal: &Location,
-        graph: &FxHashMap<Location, Node>,
-        seen: &mut FxHashSet<Location>,
+        goal: usize,
+        graph: &[Node],
+        seen: u64,
         longest: &mut usize,
     ) {
-        if seen.contains(start) {
+        let mask = 1_u64 << start;
+
+        // we're doing this as a u64 solely to avoid the hashing or array lookup
+        // overhead, which cuts the runtime from 600ms to 250ms
+        if seen & mask != 0 {
             return;
         }
 
@@ -242,15 +255,12 @@ impl ALongWalk {
             return;
         }
 
-        seen.insert(*start);
+        let next_seen = seen | mask;
 
-        if let Some(node) = graph.get(start) {
-            for (loc, dist) in node.neighbors.iter() {
-                Self::longest_recur(loc, cur_cost + dist, goal, graph, seen, longest);
-            }
+        let node = &graph[start];
+        for (next_idx, dist) in node.neighbors.iter() {
+            Self::longest_recur(*next_idx, cur_cost + dist, goal, graph, next_seen, longest);
         }
-
-        seen.remove(start);
     }
 }
 
@@ -283,17 +293,14 @@ impl FromStr for ALongWalk {
         let p2_grid = grid.clone();
         let p2_graph = graph.clone();
 
-        let start = Location::new(0, 1);
-        let end = Location::new(grid.height() - 1, grid.width() - 2);
-
         let p1_handle = thread::spawn(move || {
             let g = Self::populate_graph_with_slopes(&graph, &grid);
-            Self::longest_distance(start, end, &g)
+            Self::longest_distance(&g)
         });
 
         let p2_handle = thread::spawn(move || {
             let g = Self::populate_graph_without_slopes(&p2_graph, &p2_grid);
-            Self::longest_distance(start, end, &g)
+            Self::longest_distance(&g)
         });
 
         let p1 = p1_handle
