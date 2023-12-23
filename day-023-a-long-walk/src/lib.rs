@@ -242,24 +242,21 @@ impl ALongWalk {
         seen: u64,
         longest: &mut usize,
     ) {
-        let mask = 1_u64 << start;
-
-        // we're doing this as a u64 solely to avoid the hashing or array lookup
-        // overhead, which cuts the runtime from 600ms to 250ms
-        if seen & mask != 0 {
-            return;
-        }
-
         if start == goal {
             *longest = (*longest).max(cur_cost);
             return;
         }
 
+        // we're doing this as a u64 solely to avoid the hashing or array lookup
+        // overhead, which cuts the runtime from 600ms to 150ms
+        let mask = 1_u64 << start;
         let next_seen = seen | mask;
 
         let node = &graph[start];
         for (next_idx, dist) in node.neighbors.iter() {
-            Self::longest_recur(*next_idx, cur_cost + dist, goal, graph, next_seen, longest);
+            if (1_u64 << next_idx) & next_seen == 0 {
+                Self::longest_recur(*next_idx, cur_cost + dist, goal, graph, next_seen, longest);
+            }
         }
     }
 }
