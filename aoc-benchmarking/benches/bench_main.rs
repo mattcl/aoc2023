@@ -1,5 +1,6 @@
 use criterion::criterion_main;
 
+use a_long_walk::ALongWalk;
 use aoc_benchmarking::aoc_benches;
 use aplenty::Aplenty;
 use camel_cards::CamelCards;
@@ -170,6 +171,12 @@ aoc_benches! {
         day_022,
         "../day-022-sand-slabs/input.txt",
         SandSlabs,
+        "Combined (including parsing)"
+    ),
+    (
+        day_023,
+        "../day-023-a-long-walk/input.txt",
+        ALongWalk,
         "Combined (including parsing)"
     ),
     // bench_marker

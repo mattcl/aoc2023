@@ -3,6 +3,21 @@
 version = 3
 
 [[package]]
+name = "a-long-walk"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc-plumbing",
+ "aoc-std",
+ "itertools 0.12.0",
+ "nom",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "xxhash-rust",
+]
+
+[[package]]
 name = "ahash"
 version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -86,6 +101,7 @@ checksum = "59d2a3357dde987206219e78ecfbbb6e8dad06cbb65292758d3270e6254f7355"
 name = "aoc-benchmarking"
 version = "0.1.0"
 dependencies = [
+ "a-long-walk",
  "aoc-plumbing",
  "aplenty",
  "camel-cards",
@@ -114,8 +130,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.22.1"
+version = "0.23.0"
 dependencies = [
+ "a-long-walk",
  "anyhow",
  "aoc-plumbing",
  "aplenty",

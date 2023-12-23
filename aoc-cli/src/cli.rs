@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use a_long_walk::ALongWalk;
 use anyhow::{Context, Result};
 use aoc_plumbing::Problem;
 use aplenty::Aplenty;
@@ -208,5 +209,6 @@ generate_cli! {
     (PulsePropagation, 20),
     (StepCounter, 21),
     (SandSlabs, 22),
+    (ALongWalk, 23),
     // command_marker
 }
