@@ -1,6 +1,6 @@
 [package]
 name = "aoc-cli"
-version = "0.23.1"
+version = "0.24.0"
 authors = ["Matt Chun-Lum <matt@questionable.engineering>"]
 edition = "2021"
 description = "A command line interface for executing Advent of Code solutions."
@@ -39,3 +39,4 @@ pulse-propagation = { path = "../day-020-pulse-propagation" }
 step-counter = { path = "../day-021-step-counter" }
 sand-slabs = { path = "../day-022-sand-slabs" }
 a-long-walk = { path = "../day-023-a-long-walk" }
+never-tell-me-the-odds = { path = "../day-024-never-tell-me-the-odds" }

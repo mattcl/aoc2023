@@ -19,6 +19,7 @@ use hot_springs::HotSprings;
 use lavaduct_lagoon::LavaductLagoon;
 use lens_library::LensLibrary;
 use mirage_maintenance::MirageMaintenance;
+use never_tell_me_the_odds::NeverTellMeTheOdds;
 use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
@@ -210,5 +211,6 @@ generate_cli! {
     (StepCounter, 21),
     (SandSlabs, 22),
     (ALongWalk, 23),
+    (NeverTellMeTheOdds, 24),
     // command_marker
 }

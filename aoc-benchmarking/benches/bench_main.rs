@@ -13,6 +13,7 @@ use hot_springs::HotSprings;
 use lavaduct_lagoon::LavaductLagoon;
 use lens_library::LensLibrary;
 use mirage_maintenance::MirageMaintenance;
+use never_tell_me_the_odds::NeverTellMeTheOdds;
 use parabolic_reflector_dish::ParabolicReflectorDish;
 use pipe_maze::PipeMaze;
 use point_of_incidence::PointOfIncidence;
@@ -178,6 +179,13 @@ aoc_benches! {
         "../day-023-a-long-walk/input.txt",
         ALongWalk,
         "Combined (including parsing)"
+    ),
+    (
+        day_024,
+        "../day-024-never-tell-me-the-odds/input.txt",
+        NeverTellMeTheOdds,
+        "Part 1",
+        "Part 2"
     ),
     // bench_marker
 }

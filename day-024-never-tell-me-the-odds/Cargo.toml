@@ -1,0 +1,19 @@
+[package]
+name = "never-tell-me-the-odds"
+version = "0.1.0"
+edition = "2021"
+description = "never tell me the odds"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+aoc-plumbing = { path = "../aoc-plumbing" }
+aoc-std = { workspace = true }
+anyhow = { workspace = true }
+itertools = { workspace = true }
+nalgebra = "0.32.3"
+nom = { workspace = true }
+rayon = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true }
+xxhash-rust = { workspace = true }

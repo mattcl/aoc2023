@@ -36,3 +36,4 @@ pulse-propagation = { path = "../day-020-pulse-propagation" }
 step-counter = { path = "../day-021-step-counter" }
 sand-slabs = { path = "../day-022-sand-slabs" }
 a-long-walk = { path = "../day-023-a-long-walk" }
+never-tell-me-the-odds = { path = "../day-024-never-tell-me-the-odds" }
