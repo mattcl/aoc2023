@@ -32,16 +32,14 @@ impl Tile {
 pub struct Node {
     idx: usize,
     location: Location,
-    tile: Tile,
     neighbors: Vec<(usize, usize)>,
 }
 
 impl Node {
-    pub fn new(idx: usize, location: Location, tile: Tile) -> Self {
+    pub fn new(idx: usize, location: Location) -> Self {
         Self {
             idx,
             location,
-            tile,
             neighbors: Vec::default(),
         }
     }
@@ -57,12 +55,11 @@ impl ALongWalk {
     pub fn make_base_graph(grid: &Grid<Tile>) -> Vec<Node> {
         let mut graph: Vec<Node> = Vec::default();
 
-        let start = Node::new(0, Location::new(0, 1), Tile::Empty);
+        let start = Node::new(0, Location::new(0, 1));
 
         let end = Node::new(
             1,
             Location::new(grid.height() - 1, grid.width() - 2),
-            Tile::Empty,
         );
 
         graph.push(start);
@@ -82,7 +79,7 @@ impl ALongWalk {
                         .count()
                         > 2
                     {
-                        graph.push(Node::new(graph.len(), loc, tile));
+                        graph.push(Node::new(graph.len(), loc));
                     }
                 }
             }
@@ -228,8 +225,31 @@ impl ALongWalk {
     pub fn longest_distance(graph: &[Node]) -> usize {
         let mut longest = 0;
 
+        // We know because of the way the grid is specified in the input, that
+        // there is only one path from the first node and only one path from the
+        // end node, so we're going to exploit that to eliminate situations
+        // where we search past the penultimate node with no hope of reaching
+        // the end because we can't step on the penultimate node again. This
+        // cuts the runtime from 150 ms to 80 ms.
+
+        // Determine the first node after the start node
+        let (second, second_dist) = graph[0].neighbors[0];
+
+        // Determine the first node before the end node, if possible.
+        // In the case of the example input, and possibly the real input, it's
+        // maybe not possible to walk back from the end node for part 1 because
+        // of a slope. While we could attempt to find the node that leads to the
+        // end, part 1 is an insignificant amount of the total runtime, so I'm
+        // not going to bother.
+        let (end, end_dist, initial_seen) = if graph[1].neighbors.is_empty() {
+            (1, 0, 1)
+        } else {
+            let n = graph[1].neighbors[0];
+            (n.0, n.1, 0b11)
+        };
+
         // our start node is 0, our end is 1
-        Self::longest_recur(0, 0, 1, graph, 0, &mut longest);
+        Self::longest_recur(second, second_dist + end_dist, end, graph, initial_seen, &mut longest);
 
         longest
     }
