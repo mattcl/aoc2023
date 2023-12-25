@@ -26,6 +26,7 @@ use point_of_incidence::PointOfIncidence;
 use pulse_propagation::PulsePropagation;
 use sand_slabs::SandSlabs;
 use scratchcards::Scratchcards;
+use snowverload::Snowverload;
 use step_counter::StepCounter;
 use the_floor_will_be_lava::TheFloorWillBeLava;
 use trebuchet::Trebuchet;
@@ -212,5 +213,6 @@ generate_cli! {
     (SandSlabs, 22),
     (ALongWalk, 23),
     (NeverTellMeTheOdds, 24),
+    (Snowverload, 25),
     // command_marker
 }
