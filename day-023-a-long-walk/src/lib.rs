@@ -220,8 +220,6 @@ impl ALongWalk {
     }
 
     pub fn longest_distance(graph: &[Node]) -> usize {
-        let mut longest = 0;
-
         // We know because of the way the grid is specified in the input that
         // there is only one path from the first node and only one path from the
         // end node, so we're going to exploit that to eliminate situations
@@ -239,7 +237,7 @@ impl ALongWalk {
         // end, part 1 is an insignificant amount of the total runtime, so I'm
         // not going to bother.
         let (end, end_dist, initial_seen, gate) = if graph[1].neighbors.is_empty() {
-            (1, 0, 1, u64::MAX)
+            (1, 0, 1 | 1 << second, u64::MAX)
         } else {
             let n = graph[1].neighbors[0];
             let mut gate = 0;
@@ -253,20 +251,42 @@ impl ALongWalk {
                 gate |= 1 << n2;
             }
 
-            (n.0, n.1, 0b11, gate)
+            (n.0, n.1, 0b11 | 1 << second, gate)
         };
 
-        Self::longest_recur(
-            second,
-            second_dist + end_dist,
-            end,
-            graph,
-            gate,
-            initial_seen,
-            &mut longest,
-        );
+        // We're going to leverage the fact that I have enough CPU cores to run
+        // the recursive searches in parallel from several starting locations,
+        // so we're going to dive down two more levels to come up with a set of
+        // starting conditions to do in parallel.
+        let fourths = graph[second]
+            .neighbors
+            .iter()
+            .filter(|(idx, _)| 1 << idx & initial_seen == 0)
+            .map(|(idx, dist)| {
+                (
+                    *idx,
+                    *dist + second_dist + end_dist,
+                    initial_seen | 1 << idx,
+                )
+            })
+            .flat_map(|(idx, dist, seen)| {
+                graph[idx]
+                    .neighbors
+                    .iter()
+                    .filter(move |(fidx, _)| 1 << fidx & seen == 0)
+                    .map(move |(fidx, fdist)| ((*fidx, dist + fdist, seen | 1 << fidx)))
+            })
+            .collect::<Vec<_>>();
 
-        longest
+        fourths
+            .par_iter()
+            .map(|(start, dist, seen)| {
+                let mut longest = 0;
+                Self::longest_recur(*start, *dist, end, graph, gate, *seen, &mut longest);
+                longest
+            })
+            .max()
+            .unwrap_or_default()
     }
 
     pub fn longest_recur(
