@@ -256,7 +256,6 @@ impl ALongWalk {
             (n.0, n.1, 0b11, gate)
         };
 
-        // our start node is 0, our end is 1
         Self::longest_recur(
             second,
             second_dist + end_dist,
