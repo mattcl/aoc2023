@@ -11,7 +11,9 @@ day-specific subcommand.
 [`aoc-std`](https://github.com/mattcl/aoc-std.git) crate published to a private
 registry that will likely be inaccessible for you. You can swap that out for the
 version specified by a direct link to the git repo. There's a comment in the
-top-level (workspace) `Cargo.toml` explaining how to do this.
+top-level (workspace) `Cargo.toml` explaining how to do this, but it will
+currently not work because of a bug with cargo that does not fall back to git
+sources for subcrates if a registry is specified.
 
 
 ### Prerequisite
