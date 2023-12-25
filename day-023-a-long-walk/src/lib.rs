@@ -57,10 +57,7 @@ impl ALongWalk {
 
         let start = Node::new(0, Location::new(0, 1));
 
-        let end = Node::new(
-            1,
-            Location::new(grid.height() - 1, grid.width() - 2),
-        );
+        let end = Node::new(1, Location::new(grid.height() - 1, grid.width() - 2));
 
         graph.push(start);
         graph.push(end);
@@ -225,7 +222,7 @@ impl ALongWalk {
     pub fn longest_distance(graph: &[Node]) -> usize {
         let mut longest = 0;
 
-        // We know because of the way the grid is specified in the input, that
+        // We know because of the way the grid is specified in the input that
         // there is only one path from the first node and only one path from the
         // end node, so we're going to exploit that to eliminate situations
         // where we search past the penultimate node with no hope of reaching
@@ -241,15 +238,34 @@ impl ALongWalk {
         // of a slope. While we could attempt to find the node that leads to the
         // end, part 1 is an insignificant amount of the total runtime, so I'm
         // not going to bother.
-        let (end, end_dist, initial_seen) = if graph[1].neighbors.is_empty() {
-            (1, 0, 1)
+        let (end, end_dist, initial_seen, gate) = if graph[1].neighbors.is_empty() {
+            (1, 0, 1, u64::MAX)
         } else {
             let n = graph[1].neighbors[0];
-            (n.0, n.1, 0b11)
+            let mut gate = 0;
+
+            // now we're going to attempt to eliminate siutations where we have
+            // visited all the neighbors of the penultimate node but have not
+            // crossed into the penultimate node. We could extend this to every
+            // "layer" of the graph, but there's diminishing returns when
+            // weighed against the additional complexity/checks.
+            for (n2, _) in graph[n.0].neighbors.iter() {
+                gate |= 1 << n2;
+            }
+
+            (n.0, n.1, 0b11, gate)
         };
 
         // our start node is 0, our end is 1
-        Self::longest_recur(second, second_dist + end_dist, end, graph, initial_seen, &mut longest);
+        Self::longest_recur(
+            second,
+            second_dist + end_dist,
+            end,
+            graph,
+            gate,
+            initial_seen,
+            &mut longest,
+        );
 
         longest
     }
@@ -259,11 +275,16 @@ impl ALongWalk {
         cur_cost: usize,
         goal: usize,
         graph: &[Node],
+        gate: u64,
         seen: u64,
         longest: &mut usize,
     ) {
         if start == goal {
             *longest = (*longest).max(cur_cost);
+            return;
+        }
+
+        if seen & gate == gate {
             return;
         }
 
@@ -275,7 +296,15 @@ impl ALongWalk {
         let node = &graph[start];
         for (next_idx, dist) in node.neighbors.iter() {
             if (1_u64 << next_idx) & next_seen == 0 {
-                Self::longest_recur(*next_idx, cur_cost + dist, goal, graph, next_seen, longest);
+                Self::longest_recur(
+                    *next_idx,
+                    cur_cost + dist,
+                    goal,
+                    graph,
+                    gate,
+                    next_seen,
+                    longest,
+                );
             }
         }
     }
@@ -310,6 +339,9 @@ impl FromStr for ALongWalk {
         let p2_grid = grid.clone();
         let p2_graph = graph.clone();
 
+        // Threading this ended up being unnecessary, since the p2 time
+        // significantly dwarfs the p1 time, but I'm too lazy to remove this
+        // now.
         let p1_handle = thread::spawn(move || {
             let g = Self::populate_graph_with_slopes(&graph, &grid);
             Self::longest_distance(&g)
