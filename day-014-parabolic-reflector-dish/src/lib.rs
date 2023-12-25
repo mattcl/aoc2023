@@ -5,6 +5,8 @@ use aoc_std::{collections::Grid, geometry::Interval};
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
+/// This was my original impl, but see BitDish futher down in the file for the
+/// faster version using u128s.
 #[derive(Debug, Default, Clone)]
 pub struct Dish {
     row_intervals: Vec<Vec<Interval<i8>>>,
