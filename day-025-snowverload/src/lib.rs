@@ -10,7 +10,7 @@ use nom::{
     sequence::separated_pair,
     IResult,
 };
-use pathfinding::prelude::edmonds_karp_dense;
+use pathfinding::prelude::edmonds_karp_sparse;
 use rand::{seq::SliceRandom, thread_rng};
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -61,7 +61,7 @@ impl Snowverload {
             }
 
             let (_, capacity, min_cut) =
-                edmonds_karp_dense(&self.verticies, start, end, self.edges.iter().copied());
+                edmonds_karp_sparse(&self.verticies, start, end, self.edges.iter().copied());
             if capacity == 3 && min_cut.len() == 3 {
                 for ((l, r), _) in min_cut.iter() {
                     {
