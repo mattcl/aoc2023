@@ -29,8 +29,9 @@ impl StepCounter {
         cur.push(self.start);
 
         for step in 0..steps {
+            let is_even = step % 2 == 0;
             for loc in cur.drain(..) {
-                if step % 2 == 0 {
+                if is_even {
                     if seen_even.contains(&loc) {
                         continue;
                     }
@@ -43,8 +44,8 @@ impl StepCounter {
                 }
                 next.extend(self.grid.cardinal_neighbors(&loc).filter_map(|(_, l, t)| {
                     if *t == Tile::Garden
-                        && ((step % 2 == 0 && !seen_odd.contains(&l))
-                            || (step % 2 == 1 && !seen_even.contains(&l)))
+                        && ((is_even && !seen_odd.contains(&l))
+                            || (!is_even && !seen_even.contains(&l)))
                     {
                         Some(l)
                     } else {
@@ -69,7 +70,7 @@ impl StepCounter {
 
         // directions will have different meanings, but the same effects, even
         // if tranversal order is different
-        let start: Point2D<i64> = Point2D::new(self.start.row as i64, self.start.col as i64);
+        let start: Point2D<i32> = Point2D::new(self.start.row as i32, self.start.col as i32);
 
         let mut counts = vec![];
 
@@ -78,8 +79,10 @@ impl StepCounter {
         let rem = steps % self.grid.width();
 
         for step in 0..steps {
+            let is_even = step % 2 == 0;
+
             if step % self.grid.width() == rem {
-                let prev = if step % 2 == 0 {
+                let prev = if is_even {
                     seen_even.len()
                 } else {
                     seen_odd.len()
@@ -95,7 +98,7 @@ impl StepCounter {
             }
 
             for loc in cur.drain(..) {
-                if step % 2 == 0 {
+                if is_even {
                     if seen_even.contains(&loc) {
                         continue;
                     }
@@ -108,11 +111,11 @@ impl StepCounter {
                 }
 
                 next.extend(loc.cardinal_neighbors().filter_map(|(_, l)| {
-                    let row = l.x.rem_euclid(self.grid.height() as i64) as usize;
-                    let col = l.y.rem_euclid(self.grid.width() as i64) as usize;
+                    let row = l.x.rem_euclid(self.grid.height() as i32) as usize;
+                    let col = l.y.rem_euclid(self.grid.width() as i32) as usize;
                     if self.grid.locations[row][col] == Tile::Garden
-                        && ((step % 2 == 0 && !seen_odd.contains(&l))
-                            || (step % 2 == 1 && !seen_even.contains(&l)))
+                        && ((is_even && !seen_odd.contains(&l))
+                            || (!is_even && !seen_even.contains(&l)))
                     {
                         Some(l)
                     } else {
