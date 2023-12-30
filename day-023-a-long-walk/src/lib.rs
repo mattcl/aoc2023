@@ -46,12 +46,12 @@ impl Node {
 }
 
 #[derive(Debug, Clone)]
-pub struct ALongWalk {
+pub struct ALongWalkGen<const N: usize> {
     p1: usize,
     p2: usize,
 }
 
-impl ALongWalk {
+impl<const N: usize> ALongWalkGen<N> {
     pub fn make_base_graph(grid: &Grid<Tile>) -> Vec<Node> {
         let mut graph: Vec<Node> = Vec::default();
 
@@ -256,29 +256,23 @@ impl ALongWalk {
 
         // We're going to leverage the fact that I have enough CPU cores to run
         // the recursive searches in parallel from several starting locations,
-        // so we're going to dive down two more levels to come up with a set of
-        // starting conditions to do in parallel.
-        let fourths = graph[second]
-            .neighbors
-            .iter()
-            .filter(|(idx, _)| 1 << idx & initial_seen == 0)
-            .map(|(idx, dist)| {
-                (
-                    *idx,
-                    *dist + second_dist + end_dist,
-                    initial_seen | 1 << idx,
-                )
-            })
-            .flat_map(|(idx, dist, seen)| {
+        // so we're going to dive down a few more levels to come up with a set
+        // of starting points/conditions to do in parallel.
+        let mut starting_points = Vec::with_capacity(1000);
+        let mut next = Vec::with_capacity(1000);
+        starting_points.push((second, second_dist + end_dist, initial_seen));
+        for _depth in 2..N {
+            next.extend(starting_points.drain(..).flat_map(|(idx, dist, seen)| {
                 graph[idx]
                     .neighbors
                     .iter()
                     .filter(move |(fidx, _)| 1 << fidx & seen == 0)
-                    .map(move |(fidx, fdist)| ((*fidx, dist + fdist, seen | 1 << fidx)))
-            })
-            .collect::<Vec<_>>();
+                    .map(move |(fidx, fdist)| (*fidx, dist + fdist, seen | 1 << fidx))
+            }));
+            std::mem::swap(&mut starting_points, &mut next);
+        }
 
-        fourths
+        starting_points
             .par_iter()
             .map(|(start, dist, seen)| {
                 let mut longest = 0;
@@ -329,7 +323,7 @@ impl ALongWalk {
     }
 }
 
-impl FromStr for ALongWalk {
+impl<const N: usize> FromStr for ALongWalkGen<N> {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -382,7 +376,7 @@ impl FromStr for ALongWalk {
     }
 }
 
-impl Problem for ALongWalk {
+impl<const N: usize> Problem for ALongWalkGen<N> {
     const DAY: usize = 23;
     const TITLE: &'static str = "a long walk";
     const README: &'static str = include_str!("../README.md");
@@ -399,6 +393,8 @@ impl Problem for ALongWalk {
         Ok(self.p2)
     }
 }
+
+pub type ALongWalk = ALongWalkGen<10>;
 
 #[cfg(test)]
 mod tests {
@@ -439,7 +435,7 @@ mod tests {
 #.###.###.#.###.#.#v###
 #.....###...###...#...#
 #####################.#";
-        let solution = ALongWalk::solve(input).unwrap();
+        let solution = ALongWalkGen::<5>::solve(input).unwrap();
         assert_eq!(solution, Solution::new(94, 154));
     }
 }
