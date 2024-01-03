@@ -16,26 +16,14 @@ use rustc_hash::FxHashMap;
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Spring {
     key: String,
-    long_key: String,
     groups: Vec<u8>,
-    long_groups: Vec<u8>,
 }
 
 impl Spring {
     pub fn new(key: &str, groups: Vec<u8>) -> Self {
-        let long_key = [key].iter().cycle().take(5).join("?");
-        let long_groups = groups
-            .iter()
-            .copied()
-            .cycle()
-            .take(5 * groups.len())
-            .collect();
-
         Self {
             key: key.to_string(),
-            long_key,
             groups,
-            long_groups,
         }
     }
 }
@@ -180,9 +168,19 @@ impl HotSprings {
         self.springs
             .par_iter()
             .map(|s| {
+                let long_key = [&s.key].iter().cycle().take(5).join("?");
+                let long_groups: Vec<_> = s
+                    .groups
+                    .iter()
+                    .copied()
+                    .cycle()
+                    .take(5 * s.groups.len())
+                    .collect();
+
                 let mut seen =
                     FxHashMap::with_capacity_and_hasher(5000, BuildHasherDefault::default());
-                arrangements(s.long_key.as_bytes(), &s.long_groups, &mut seen)
+
+                arrangements(long_key.as_bytes(), &long_groups, &mut seen)
             })
             .sum()
     }
