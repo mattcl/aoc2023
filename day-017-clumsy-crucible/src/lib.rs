@@ -2,9 +2,7 @@ use std::{hash::Hash, str::FromStr, sync::Arc, thread};
 
 use anyhow::anyhow;
 use aoc_plumbing::Problem;
-use aoc_std::{
-    collections::Grid, directions::Cardinal, geometry::Location, pathing::dijkstra::dijkstra,
-};
+use aoc_std::{collections::Grid, geometry::Location, pathing::dijkstra::dijkstra};
 
 // we actually only need to know which directions our left and right are, since
 // we're going to precompute all the nodes between min-max so n/s e/w are
@@ -15,19 +13,10 @@ pub enum Orientation {
     Vertical,
 }
 
-impl Orientation {
-    pub fn switch(&self) -> Self {
-        match self {
-            Self::Vertical => Self::Horizontal,
-            Self::Horizontal => Self::Vertical,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node {
-    location: Location,
     orientation: Orientation,
+    location: Location,
 }
 
 impl Default for Node {
@@ -39,99 +28,100 @@ impl Default for Node {
     }
 }
 
-const HORIZ_NEXT: [Cardinal; 2] = [Cardinal::North, Cardinal::South];
-const VERT_NEXT: [Cardinal; 2] = [Cardinal::West, Cardinal::East];
-
 #[derive(Debug, Clone)]
 pub struct Blocks {
-    grid: Grid<u32>,
+    grid: Grid<u8>,
 }
 
 impl Blocks {
-    pub fn all_in_direction(
+    pub fn horizontal(
         &self,
         start: Location,
-        dir: Cardinal,
         min: usize,
         max: usize,
     ) -> impl Iterator<Item = (Node, u32)> + '_ {
-        // precompute cost below the min
-        let mut cost = 0;
-        for i in 1..min {
-            match dir {
-                Cardinal::North if start.row >= i => {
-                    let new_row = start.row - i;
-                    cost += self.grid.locations[new_row][start.col];
-                }
-                Cardinal::South if self.grid.height() > start.row + i => {
-                    let new_row = start.row + i;
-                    cost += self.grid.locations[new_row][start.col];
-                }
-                Cardinal::West if start.col >= i => {
-                    let new_col = start.col - i;
-                    cost += self.grid.locations[start.row][new_col];
-                }
-                Cardinal::East if self.grid.width() > start.col + i => {
-                    let new_col = start.col + i;
-                    cost += self.grid.locations[start.row][new_col];
-                }
-                _ => break,
-            }
+        let mut cost_west = 0;
+        let mut cost_east = 0;
+        for i in 1..min.min(start.col + 1) {
+            let new_col = start.col - i;
+            cost_west += self.grid.locations[start.row][new_col];
         }
 
-        let adjusted_max = match dir {
-            Cardinal::North => max.min(start.row),
-            Cardinal::South => max.min(self.grid.height() - 1 - start.row),
-            Cardinal::West => max.min(start.col),
-            Cardinal::East => max.min(self.grid.width() - 1 - start.col),
-        };
+        for i in (start.col + 1)..(start.col + min).min(self.grid.width()) {
+            cost_east += self.grid.locations[start.row][i];
+        }
 
-        (min..=adjusted_max).map(move |i| match dir {
-            Cardinal::North => {
-                let new_row = start.row - i;
-                cost += self.grid.locations[new_row][start.col];
-                (
-                    Node {
-                        location: Location::new(new_row, start.col),
-                        orientation: Orientation::Vertical,
-                    },
-                    cost,
-                )
-            }
-            Cardinal::South => {
-                let new_row = start.row + i;
-                cost += self.grid.locations[new_row][start.col];
-                (
-                    Node {
-                        location: Location::new(new_row, start.col),
-                        orientation: Orientation::Vertical,
-                    },
-                    cost,
-                )
-            }
-            Cardinal::West => {
-                let new_col = start.col - i;
-                cost += self.grid.locations[start.row][new_col];
-                (
-                    Node {
-                        location: Location::new(start.row, new_col),
-                        orientation: Orientation::Horizontal,
-                    },
-                    cost,
-                )
-            }
-            Cardinal::East => {
+        let max_west = max.min(start.col);
+        let max_east = max.min(self.grid.width() - 1 - start.col);
+
+        (min..=max_east)
+            .map(move |i| {
                 let new_col = start.col + i;
-                cost += self.grid.locations[start.row][new_col];
+                cost_east += self.grid.locations[start.row][new_col];
                 (
                     Node {
                         location: Location::new(start.row, new_col),
                         orientation: Orientation::Horizontal,
                     },
-                    cost,
+                    cost_east as u32,
                 )
-            }
-        })
+            })
+            .chain((min..=max_west).map(move |i| {
+                let new_col = start.col - i;
+                cost_west += self.grid.locations[start.row][new_col];
+                (
+                    Node {
+                        location: Location::new(start.row, new_col),
+                        orientation: Orientation::Horizontal,
+                    },
+                    cost_west as u32,
+                )
+            }))
+    }
+
+    pub fn vertical(
+        &self,
+        start: Location,
+        min: usize,
+        max: usize,
+    ) -> impl Iterator<Item = (Node, u32)> + '_ {
+        let mut cost_north = 0;
+        let mut cost_south = 0;
+        for i in 1..min.min(start.row + 1) {
+            let new_row = start.row - i;
+            cost_north += self.grid.locations[new_row][start.col];
+        }
+
+        for i in (start.row + 1)..(start.row + min).min(self.grid.height()) {
+            cost_south += self.grid.locations[i][start.col];
+        }
+
+        let max_north = max.min(start.row);
+        let max_south = max.min(self.grid.height() - 1 - start.row);
+
+        (min..=max_south)
+            .map(move |i| {
+                let new_row = start.row + i;
+                cost_south += self.grid.locations[new_row][start.col];
+                (
+                    Node {
+                        location: Location::new(new_row, start.col),
+                        orientation: Orientation::Vertical,
+                    },
+                    cost_south as u32,
+                )
+            })
+            .chain((min..=max_north).map(move |i| {
+                let new_row = start.row - i;
+                cost_north += self.grid.locations[new_row][start.col];
+                (
+                    Node {
+                        location: Location::new(new_row, start.col),
+                        orientation: Orientation::Vertical,
+                    },
+                    cost_north as u32,
+                )
+            }))
     }
 
     pub fn minimize(&self, min: usize, max: usize) -> u32 {
@@ -141,18 +131,20 @@ impl Blocks {
         let result = dijkstra(
             &start,
             &mut |node| {
-                let old = *node;
+                let location = node.location;
 
+                // we can avoid the vec allocations with Box<dyn Iterator...>,
+                // but that doesn't actually give us performance gains.
                 if first {
                     first = false;
-                    [Cardinal::East, Cardinal::South]
-                } else if old.orientation == Orientation::Horizontal {
-                    HORIZ_NEXT
+                    self.horizontal(location, min, max)
+                        .chain(self.vertical(location, min, max))
+                        .collect::<Vec<_>>()
+                } else if node.orientation == Orientation::Horizontal {
+                    self.vertical(location, min, max).collect::<Vec<_>>()
                 } else {
-                    VERT_NEXT
+                    self.horizontal(location, min, max).collect::<Vec<_>>()
                 }
-                .into_iter()
-                .flat_map(move |dir| self.all_in_direction(old.location, dir, min, max))
             },
             &mut |node| node.location == end,
         );
@@ -176,7 +168,7 @@ impl FromStr for ClumsyCrucible {
             .lines()
             .map(|l| {
                 l.chars()
-                    .map(|ch| ch.to_digit(10).unwrap_or_default())
+                    .map(|ch| ch.to_digit(10).unwrap_or_default() as u8)
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>();
