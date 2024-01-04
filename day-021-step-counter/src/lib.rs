@@ -5,7 +5,6 @@ use aoc_std::{
     collections::Grid,
     geometry::{Location, Point2D},
 };
-use rustc_hash::FxHashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Tile {
@@ -21,32 +20,27 @@ pub struct StepCounter {
 
 impl StepCounter {
     pub fn bfs(&self, steps: usize) -> usize {
-        let mut seen_odd = FxHashSet::default();
-        let mut seen_even = FxHashSet::default();
+        let parity = steps % 2 == 0;
+        let mut seen = vec![vec![false; self.grid.width()]; self.grid.height()];
+        seen[self.start.row][self.start.col] = true;
         let mut cur = Vec::default();
         let mut next = Vec::default();
 
+        let mut count = if parity { 1 } else { 0 };
+
         cur.push(self.start);
 
-        for step in 0..steps {
-            let is_even = step % 2 == 0;
+        for step in 1..=steps {
+            if cur.is_empty() {
+                break;
+            }
             for loc in cur.drain(..) {
-                if is_even {
-                    if seen_even.contains(&loc) {
-                        continue;
-                    }
-                    seen_even.insert(loc);
-                } else {
-                    if seen_odd.contains(&loc) {
-                        continue;
-                    }
-                    seen_odd.insert(loc);
-                }
                 next.extend(self.grid.cardinal_neighbors(&loc).filter_map(|(_, l, t)| {
-                    if *t == Tile::Garden
-                        && ((is_even && !seen_odd.contains(&l))
-                            || (!is_even && !seen_even.contains(&l)))
-                    {
+                    if *t == Tile::Garden && !seen[l.row][l.col] {
+                        seen[l.row][l.col] = true;
+                        if parity == (step % 2 == 0) {
+                            count += 1;
+                        }
                         Some(l)
                     } else {
                         None
@@ -56,72 +50,66 @@ impl StepCounter {
             std::mem::swap(&mut cur, &mut next);
         }
 
-        // it's actually faster to just remove the duplicates here than it is
-        // for cur and next to be hashsets
-        let unique = FxHashSet::from_iter(cur);
-        unique.len() + seen_even.len()
+        count
     }
 
     pub fn infinite_bfs(&self, steps: usize) -> i64 {
-        let mut seen_odd = FxHashSet::default();
-        let mut seen_even = FxHashSet::default();
+        let parity = steps % 2 == 0;
         let mut cur = Vec::default();
         let mut next = Vec::default();
+
+        let rem = steps % self.grid.width();
+        let max_width = self.grid.width() * 5;
+        let offset = (self.grid.width() * 2) as i32;
+        // this is faster than hashing everything, apparently
+        let mut seen = vec![vec![false; max_width]; max_width];
 
         // directions will have different meanings, but the same effects, even
         // if tranversal order is different
         let start: Point2D<i32> = Point2D::new(self.start.row as i32, self.start.col as i32);
 
+        let mut odd_count = if parity { 1 } else { 0 };
+
+        let mut even_count = if parity { 0 } else { 1 };
+
         let mut counts = vec![];
 
+        seen[self.start.row + offset as usize][self.start.col + offset as usize] = true;
         cur.push(start);
 
-        let rem = steps % self.grid.width();
-
-        for step in 0..steps {
-            let is_even = step % 2 == 0;
-
-            if step % self.grid.width() == rem {
-                let prev = if is_even {
-                    seen_even.len()
-                } else {
-                    seen_odd.len()
-                };
-                // it's actually faster to just remove the duplicates whenever
-                // we're inserting than it is for cur and next to be hashsets
-                let unique = FxHashSet::from_iter(cur.iter());
-                counts.push(unique.len() + prev);
-
-                if counts.len() == 3 {
-                    break;
-                }
-            }
-
+        for step in 1..=steps {
             for loc in cur.drain(..) {
-                if is_even {
-                    if seen_even.contains(&loc) {
-                        continue;
-                    }
-                    seen_even.insert(loc);
-                } else {
-                    if seen_odd.contains(&loc) {
-                        continue;
-                    }
-                    seen_odd.insert(loc);
-                }
-
                 next.extend(loc.cardinal_neighbors().filter_map(|(_, l)| {
                     let row = l.x.rem_euclid(self.grid.height() as i32) as usize;
                     let col = l.y.rem_euclid(self.grid.width() as i32) as usize;
+                    let adjusted_row = (offset + l.x) as usize;
+                    let adjusted_col = (offset + l.y) as usize;
                     if self.grid.locations[row][col] == Tile::Garden
-                        && ((is_even && !seen_odd.contains(&l))
-                            || (!is_even && !seen_even.contains(&l)))
+                        && !seen[adjusted_row][adjusted_col]
                     {
+                        seen[adjusted_row][adjusted_col] = true;
+                        if parity == (step % 2 == 0) {
+                            odd_count += 1;
+                        } else {
+                            even_count += 1;
+                        }
                         Some(l)
                     } else {
                         None
                     }
                 }));
+            }
+
+            if step % self.grid.width() == rem {
+                if step % 2 == 1 {
+                    counts.push(odd_count);
+                } else {
+                    counts.push(even_count);
+                }
+
+                if counts.len() == 3 {
+                    break;
+                }
             }
 
             std::mem::swap(&mut cur, &mut next);
