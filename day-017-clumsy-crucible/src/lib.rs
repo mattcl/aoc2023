@@ -2,7 +2,7 @@ use std::{hash::Hash, str::FromStr, sync::Arc, thread};
 
 use anyhow::anyhow;
 use aoc_plumbing::Problem;
-use aoc_std::{collections::Grid, geometry::Location, pathing::dijkstra::dijkstra};
+use aoc_std::{collections::Grid, geometry::Location, pathing::dijkstra::bucket_dijkstra};
 
 // we actually only need to know which directions our left and right are, since
 // we're going to precompute all the nodes between min-max so n/s e/w are
@@ -39,7 +39,7 @@ impl Blocks {
         start: Location,
         min: usize,
         max: usize,
-    ) -> impl Iterator<Item = (Node, u32)> + '_ {
+    ) -> impl Iterator<Item = (Node, usize)> + '_ {
         let mut cost_west = 0;
         let mut cost_east = 0;
         for i in 1..min.min(start.col + 1) {
@@ -63,7 +63,7 @@ impl Blocks {
                         location: Location::new(start.row, new_col),
                         orientation: Orientation::Horizontal,
                     },
-                    cost_east as u32,
+                    cost_east as usize,
                 )
             })
             .chain((min..=max_west).map(move |i| {
@@ -74,7 +74,7 @@ impl Blocks {
                         location: Location::new(start.row, new_col),
                         orientation: Orientation::Horizontal,
                     },
-                    cost_west as u32,
+                    cost_west as usize,
                 )
             }))
     }
@@ -84,7 +84,7 @@ impl Blocks {
         start: Location,
         min: usize,
         max: usize,
-    ) -> impl Iterator<Item = (Node, u32)> + '_ {
+    ) -> impl Iterator<Item = (Node, usize)> + '_ {
         let mut cost_north = 0;
         let mut cost_south = 0;
         for i in 1..min.min(start.row + 1) {
@@ -108,7 +108,7 @@ impl Blocks {
                         location: Location::new(new_row, start.col),
                         orientation: Orientation::Vertical,
                     },
-                    cost_south as u32,
+                    cost_south as usize,
                 )
             })
             .chain((min..=max_north).map(move |i| {
@@ -119,16 +119,16 @@ impl Blocks {
                         location: Location::new(new_row, start.col),
                         orientation: Orientation::Vertical,
                     },
-                    cost_north as u32,
+                    cost_north as usize,
                 )
             }))
     }
 
-    pub fn minimize(&self, min: usize, max: usize) -> u32 {
+    pub fn minimize(&self, min: usize, max: usize) -> usize {
         let start = Node::default();
         let end = Location::new(self.grid.height() - 1, self.grid.width() - 1);
         let mut first = true;
-        let result = dijkstra(
+        let result = bucket_dijkstra(
             &start,
             &mut |node| {
                 let location = node.location;
@@ -155,8 +155,8 @@ impl Blocks {
 
 #[derive(Debug, Clone)]
 pub struct ClumsyCrucible {
-    p1: u32,
-    p2: u32,
+    p1: usize,
+    p2: usize,
 }
 
 impl FromStr for ClumsyCrucible {
@@ -201,8 +201,8 @@ impl Problem for ClumsyCrucible {
     const README: &'static str = include_str!("../README.md");
 
     type ProblemError = anyhow::Error;
-    type P1 = u32;
-    type P2 = u32;
+    type P1 = usize;
+    type P2 = usize;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
         Ok(self.p1)
