@@ -33,6 +33,7 @@ pub struct Node {
     idx: usize,
     location: Location,
     neighbors: Vec<(usize, usize)>,
+    layer: usize,
 }
 
 impl Node {
@@ -41,7 +42,29 @@ impl Node {
             idx,
             location,
             neighbors: Vec::default(),
+            layer: 0,
         }
+    }
+}
+
+// this is maybe too tuned to the input shape everyone was given, but a way to
+// make this perhaps more general would be to use a vec instead of the array
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LayerSet {
+    layer_counts: [u8; 15],
+}
+
+impl LayerSet {
+    pub fn increment(&mut self, layer: usize) {
+        self.layer_counts[layer] += 1;
+    }
+
+    pub fn decrement(&mut self, layer: usize) {
+        self.layer_counts[layer] -= 1;
+    }
+
+    pub fn remaining_nodes_at_layer(&self, layer: usize) -> bool {
+        self.layer_counts[layer] != 0
     }
 }
 
@@ -219,13 +242,52 @@ impl<const N: usize> ALongWalkGen<N> {
         out
     }
 
-    pub fn longest_distance(graph: &[Node]) -> usize {
-        // We know because of the way the grid is specified in the input that
-        // there is only one path from the first node and only one path from the
-        // end node, so we're going to exploit that to eliminate situations
-        // where we search past the penultimate node with no hope of reaching
-        // the end because we can't step on the penultimate node again. This
-        // cuts the runtime from 150 ms to 80 ms.
+    pub fn compute_layer_set_and_update_nodes(end: usize, graph: &mut Vec<Node>) -> LayerSet {
+        let mut ls = LayerSet::default();
+
+        let len = graph.len();
+
+        for idx in 0..len {
+            let layer = Self::dist_to_end(idx, end, graph);
+            ls.increment(layer);
+            graph[idx].layer = layer;
+        }
+
+        ls
+    }
+
+    pub fn dist_to_end(start: usize, end: usize, graph: &[Node]) -> usize {
+        let mut cur = vec![(start, 0)];
+        let mut next: Vec<(usize, usize)> = Vec::default();
+        let mut seen = 0_u64 | (1 << start);
+
+        while !cur.is_empty() {
+            for (idx, dist) in cur.drain(..) {
+                if idx == end {
+                    return dist;
+                }
+
+                seen |= 1 << idx;
+
+                next.extend(
+                    graph[idx]
+                        .neighbors
+                        .iter()
+                        .filter(|(n, _)| (1 << n) & seen == 0)
+                        .map(|(n, _)| (*n, dist + 1)),
+                );
+            }
+
+            std::mem::swap(&mut cur, &mut next);
+        }
+
+        usize::MAX
+    }
+
+    pub fn longest_distance(graph: &[Node], layer_set: LayerSet) -> usize {
+        // we're going to use the layer set to eliminate situations where we are
+        // forced to descend towards the end because otherwise we would not be
+        // able to cross a particular layer again
 
         // Determine the first node after the start node
         let (second, second_dist) = graph[0].neighbors[0];
@@ -236,22 +298,11 @@ impl<const N: usize> ALongWalkGen<N> {
         // of a slope. While we could attempt to find the node that leads to the
         // end, part 1 is an insignificant amount of the total runtime, so I'm
         // not going to bother.
-        let (end, end_dist, initial_seen, gate) = if graph[1].neighbors.is_empty() {
-            (1, 0, 1 | 1 << second, u64::MAX)
+        let (end, end_dist, initial_seen) = if graph[1].neighbors.is_empty() {
+            (1, 0, 1 | 1 << second)
         } else {
             let n = graph[1].neighbors[0];
-            let mut gate = 0;
-
-            // now we're going to attempt to eliminate siutations where we have
-            // visited all the neighbors of the penultimate node but have not
-            // crossed into the penultimate node. We could extend this to every
-            // "layer" of the graph, but there's diminishing returns when
-            // weighed against the additional complexity/checks.
-            for (n2, _) in graph[n.0].neighbors.iter() {
-                gate |= 1 << n2;
-            }
-
-            (n.0, n.1, 0b11 | 1 << second, gate)
+            (n.0, n.1, 0b11 | 1 << second)
         };
 
         // We're going to leverage the fact that I have enough CPU cores to run
@@ -260,23 +311,28 @@ impl<const N: usize> ALongWalkGen<N> {
         // of starting points/conditions to do in parallel.
         let mut starting_points = Vec::with_capacity(1000);
         let mut next = Vec::with_capacity(1000);
-        starting_points.push((second, second_dist + end_dist, initial_seen));
+        starting_points.push((second, second_dist + end_dist, initial_seen, layer_set));
         for _depth in 2..N {
-            next.extend(starting_points.drain(..).flat_map(|(idx, dist, seen)| {
-                graph[idx]
-                    .neighbors
-                    .iter()
-                    .filter(move |(fidx, _)| 1 << fidx & seen == 0)
-                    .map(move |(fidx, fdist)| (*fidx, dist + fdist, seen | 1 << fidx))
-            }));
+            next.extend(
+                starting_points
+                    .drain(..)
+                    .flat_map(|(idx, dist, seen, mut ls)| {
+                        ls.decrement(graph[idx].layer);
+                        graph[idx]
+                            .neighbors
+                            .iter()
+                            .filter(move |(fidx, _)| 1 << fidx & seen == 0)
+                            .map(move |(fidx, fdist)| (*fidx, dist + fdist, seen | 1 << fidx, ls))
+                    }),
+            );
             std::mem::swap(&mut starting_points, &mut next);
         }
 
         starting_points
             .par_iter()
-            .map(|(start, dist, seen)| {
+            .map(|(start, dist, seen, ls)| {
                 let mut longest = 0;
-                Self::longest_recur(*start, *dist, end, graph, gate, *seen, &mut longest);
+                Self::longest_recur(*start, *dist, end, graph, ls, *seen, &mut longest);
                 longest
             })
             .max()
@@ -288,16 +344,12 @@ impl<const N: usize> ALongWalkGen<N> {
         cur_cost: usize,
         goal: usize,
         graph: &[Node],
-        gate: u64,
+        layer_set: &LayerSet,
         seen: u64,
         longest: &mut usize,
     ) {
         if start == goal {
             *longest = (*longest).max(cur_cost);
-            return;
-        }
-
-        if seen & gate == gate {
             return;
         }
 
@@ -307,14 +359,24 @@ impl<const N: usize> ALongWalkGen<N> {
         let next_seen = seen | mask;
 
         let node = &graph[start];
+        let mut next_layer_set = *layer_set;
+        next_layer_set.decrement(node.layer);
+        let can_move_away_from_end = next_layer_set.remaining_nodes_at_layer(node.layer);
+
         for (next_idx, dist) in node.neighbors.iter() {
+            let next_node = &graph[*next_idx];
+
+            if !can_move_away_from_end && next_node.layer > node.layer {
+                continue;
+            }
+
             if (1_u64 << next_idx) & next_seen == 0 {
                 Self::longest_recur(
                     *next_idx,
                     cur_cost + dist,
                     goal,
                     graph,
-                    gate,
+                    &next_layer_set,
                     next_seen,
                     longest,
                 );
@@ -356,13 +418,15 @@ impl<const N: usize> FromStr for ALongWalkGen<N> {
         // significantly dwarfs the p1 time, but I'm too lazy to remove this
         // now.
         let p1_handle = thread::spawn(move || {
-            let g = Self::populate_graph_with_slopes(&graph, &grid);
-            Self::longest_distance(&g)
+            let mut g = Self::populate_graph_with_slopes(&graph, &grid);
+            let layer_set = Self::compute_layer_set_and_update_nodes(1, &mut g);
+            Self::longest_distance(&g, layer_set)
         });
 
         let p2_handle = thread::spawn(move || {
-            let g = Self::populate_graph_without_slopes(&p2_graph, &p2_grid);
-            Self::longest_distance(&g)
+            let mut g = Self::populate_graph_without_slopes(&p2_graph, &p2_grid);
+            let layer_set = Self::compute_layer_set_and_update_nodes(1, &mut g);
+            Self::longest_distance(&g, layer_set)
         });
 
         let p1 = p1_handle
