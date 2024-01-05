@@ -5,6 +5,7 @@ use aoc_std::{
     collections::Grid,
     geometry::{Location, Point2D},
 };
+use rayon::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Tile {
@@ -54,62 +55,92 @@ impl StepCounter {
     }
 
     pub fn geometric_infinite(&self, steps: usize) -> u64 {
-        let origin_map = self.distance_map(&[self.start]);
-        let border_map = self.distance_map(&[
-            (0, 0).into(),
-            (0, self.start.col).into(),
-            (0, self.grid.width() - 1).into(),
-            (self.start.row, 0).into(),
-            (self.start.row, self.grid.width() - 1).into(),
-            (self.grid.height() - 1, 0).into(),
-            (self.grid.height() - 1, self.start.col).into(),
-            (self.grid.height() - 1, self.grid.width() - 1).into(),
-        ]);
-
         // we're going to basically assume this is square from this point on
-        let half = (self.grid.height() / 2) as u16;
+        let n = self.grid.height() as u16;
+        let r = n / 2;
+        let x = steps as u64 / n as u64;
 
-        let mut full_odd = 0_u64;
-        let mut full_even = 0_u64;
-        let mut corner_odd = 0_u64;
-        let mut corner_even = 0_u64;
+        let starting_conditions = [
+            // core
+            (
+                (self.start.row, self.start.col).into(),
+                u16::MAX,
+                u16::MAX,
+                x * x,
+                (x - 1) * (x - 1),
+            ),
+            // cardinal
+            ((0, self.start.col).into(), n - 1, n - 1, 1, 0),
+            (
+                (self.grid.height() - 1, self.start.col).into(),
+                n - 1,
+                n - 1,
+                1,
+                0,
+            ),
+            ((self.start.row, 0).into(), n - 1, n - 1, 1, 0),
+            (
+                (self.start.row, self.grid.width() - 1).into(),
+                n - 1,
+                n - 1,
+                1,
+                0,
+            ),
+            // corners
+            ((0, 0).into(), r - 1, n + r - 1, x, x - 1),
+            (
+                (0, self.grid.width() - 1).into(),
+                r - 1,
+                n + r - 1,
+                x,
+                x - 1,
+            ),
+            (
+                (self.grid.height() - 1, 0).into(),
+                r - 1,
+                n + r - 1,
+                x,
+                x - 1,
+            ),
+            (
+                (self.grid.height() - 1, self.grid.width() - 1).into(),
+                r - 1,
+                n + r - 1,
+                x,
+                x - 1,
+            ),
+        ];
 
-        for r in 0..self.grid.height() {
-            for c in 0..self.grid.width() {
-                let origin_dist = origin_map[r][c];
-                if origin_dist == u16::MAX {
-                    continue;
-                }
-
-                if origin_dist % 2 == 0 {
-                    full_even += 1;
-
-                    if origin_dist > half && border_map[r][c] <= half {
-                        corner_even += 1;
-                    }
-                } else {
-                    full_odd += 1;
-
-                    if origin_dist > half && border_map[r][c] <= half {
-                        corner_odd += 1;
-                    }
-                }
-            }
-        }
-
-        // number of grids until outer edge
-        let n = (steps as u64 - half as u64) / self.grid.height() as u64;
-        (n + 1).pow(2) * full_odd + n.pow(2) * full_even - (n + 1) * corner_odd + n * corner_even
+        starting_conditions
+            .into_par_iter()
+            .map(
+                |(start, even_limit, odd_limit, even_multiplier, odd_multiplier)| {
+                    self.constrained_reachable(
+                        &start,
+                        even_limit,
+                        odd_limit,
+                        even_multiplier,
+                        odd_multiplier,
+                    )
+                },
+            )
+            .sum()
     }
 
-    pub fn distance_map(&self, start: &[Location]) -> Vec<Vec<u16>> {
-        let mut steps = vec![vec![u16::MAX; self.grid.width()]; self.grid.height()];
-
+    pub fn constrained_reachable(
+        &self,
+        start: &Location,
+        even_limit: u16,
+        odd_limit: u16,
+        even_multiplier: u64,
+        odd_multiplier: u64,
+    ) -> u64 {
+        let mut seen = vec![vec![false; self.grid.width()]; self.grid.height()];
         let mut cur = VecDeque::with_capacity(1000);
-        for loc in start.iter() {
-            cur.push_back((*loc, 0));
-            steps[loc.row][loc.col] = 0;
-        }
+        let mut even = 1;
+        let mut odd = 0;
+        cur.push_back((*start, 0));
+        seen[start.row][start.col] = true;
 
         while let Some((loc, dist)) = cur.pop_front() {
             for (_, l, _) in self
@@ -117,14 +148,26 @@ impl StepCounter {
                 .cardinal_neighbors(&loc)
                 .filter(|(_, _, t)| **t == Tile::Garden)
             {
-                if steps[l.row][l.col] == u16::MAX {
-                    steps[l.row][l.col] = dist + 1;
-                    cur.push_back((l, dist + 1));
+                if !seen[l.row][l.col] {
+                    seen[l.row][l.col] = true;
+                    let next_dist = dist + 1;
+
+                    if next_dist % 2 == 0 {
+                        if next_dist <= even_limit {
+                            even += 1;
+                        }
+                    } else if next_dist <= odd_limit {
+                        odd += 1;
+                    }
+
+                    if next_dist <= odd_limit {
+                        cur.push_back((l, next_dist));
+                    }
                 }
             }
         }
 
-        steps
+        even as u64 * even_multiplier + odd as u64 * odd_multiplier
     }
 
     // my original implementation. A friend's impl convinced me the geomeric
