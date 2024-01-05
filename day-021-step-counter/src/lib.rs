@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::VecDeque, str::FromStr};
 
 use aoc_plumbing::Problem;
 use aoc_std::{
@@ -53,6 +53,82 @@ impl StepCounter {
         count
     }
 
+    pub fn geometric_infinite(&self, steps: usize) -> u64 {
+        let origin_map = self.distance_map(&[self.start]);
+        let border_map = self.distance_map(&[
+            (0, 0).into(),
+            (0, self.start.col).into(),
+            (0, self.grid.width() - 1).into(),
+            (self.start.row, 0).into(),
+            (self.start.row, self.grid.width() - 1).into(),
+            (self.grid.height() - 1, 0).into(),
+            (self.grid.height() - 1, self.start.col).into(),
+            (self.grid.height() - 1, self.grid.width() - 1).into(),
+        ]);
+
+        // we're going to basically assume this is square from this point on
+        let half = (self.grid.height() / 2) as u16;
+
+        let mut full_odd = 0_u64;
+        let mut full_even = 0_u64;
+        let mut corner_odd = 0_u64;
+        let mut corner_even = 0_u64;
+
+        for r in 0..self.grid.height() {
+            for c in 0..self.grid.width() {
+                let origin_dist = origin_map[r][c];
+                if origin_dist == u16::MAX {
+                    continue;
+                }
+
+                if origin_dist % 2 == 0 {
+                    full_even += 1;
+
+                    if origin_dist > half && border_map[r][c] <= half {
+                        corner_even += 1;
+                    }
+                } else {
+                    full_odd += 1;
+
+                    if origin_dist > half && border_map[r][c] <= half {
+                        corner_odd += 1;
+                    }
+                }
+            }
+        }
+
+        // number of grids until outer edge
+        let n = (steps as u64 - half as u64) / self.grid.height() as u64;
+        (n + 1).pow(2) * full_odd + n.pow(2) * full_even - (n + 1) * corner_odd + n * corner_even
+    }
+
+    pub fn distance_map(&self, start: &[Location]) -> Vec<Vec<u16>> {
+        let mut steps = vec![vec![u16::MAX; self.grid.width()]; self.grid.height()];
+
+        let mut cur = VecDeque::with_capacity(1000);
+        for loc in start.iter() {
+            cur.push_back((*loc, 0));
+            steps[loc.row][loc.col] = 0;
+        }
+
+        while let Some((loc, dist)) = cur.pop_front() {
+            for (_, l, _) in self
+                .grid
+                .cardinal_neighbors(&loc)
+                .filter(|(_, _, t)| **t == Tile::Garden)
+            {
+                if steps[l.row][l.col] == u16::MAX {
+                    steps[l.row][l.col] = dist + 1;
+                    cur.push_back((l, dist + 1));
+                }
+            }
+        }
+
+        steps
+    }
+
+    // my original implementation. A friend's impl convinced me the geomeric
+    // solution is faster, but keeping this around as an alternative.
     pub fn infinite_bfs(&self, steps: usize) -> i64 {
         let parity = steps % 2 == 0;
         let mut cur = Vec::default();
@@ -165,14 +241,14 @@ impl Problem for StepCounter {
 
     type ProblemError = anyhow::Error;
     type P1 = usize;
-    type P2 = i64;
+    type P2 = u64;
 
     fn part_one(&mut self) -> Result<Self::P1, Self::ProblemError> {
         Ok(self.bfs(64))
     }
 
     fn part_two(&mut self) -> Result<Self::P2, Self::ProblemError> {
-        Ok(self.infinite_bfs(26501365))
+        Ok(self.geometric_infinite(26501365))
     }
 }
 
