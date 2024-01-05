@@ -132,7 +132,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.25.7"
+version = "0.25.8"
 dependencies = [
  "a-long-walk",
  "anyhow",
