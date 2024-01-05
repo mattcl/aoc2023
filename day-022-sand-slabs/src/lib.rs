@@ -14,12 +14,12 @@ use rustc_hash::FxHashSet;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Brick {
-    cube: Cube<i64>,
-    horiz_rect: Rectangle<i64>,
+    cube: Cube<i16>,
+    horiz_rect: Rectangle<i16>,
 }
 
 impl Brick {
-    pub fn new(p1: Point3D<i64>, p2: Point3D<i64>) -> Self {
+    pub fn new(p1: Point3D<i16>, p2: Point3D<i16>) -> Self {
         let cube = Cube::new(p1, p2);
         // we'll just store this instead of having to compute it each collision
         // check
@@ -28,7 +28,7 @@ impl Brick {
         Self { cube, horiz_rect }
     }
 
-    pub fn set_z(&mut self, value: i64) {
+    pub fn set_z(&mut self, value: i16) {
         let delta = value - self.cube.start.z;
         self.cube.translate_z(delta);
     }
@@ -38,14 +38,14 @@ impl Brick {
     }
 }
 
-fn parse_point(input: &str) -> IResult<&str, Point3D<i64>> {
+fn parse_point(input: &str) -> IResult<&str, Point3D<i16>> {
     combinator::map(
         tuple((
-            complete::i64,
+            complete::i16,
             complete::char(','),
-            complete::i64,
+            complete::i16,
             complete::char(','),
-            complete::i64,
+            complete::i16,
         )),
         |(x, _, y, _, z)| Point3D::new(x, y, z),
     )(input)
@@ -65,7 +65,7 @@ fn parse_bricks(input: &str) -> IResult<&str, Vec<Brick>> {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StableEntry {
     index: usize,
-    z_height: i64,
+    z_height: i16,
 }
 
 impl Ord for StableEntry {
@@ -135,7 +135,6 @@ impl SandSlabs {
         let required = FxHashSet::from_iter(below.iter().filter(|b| b.len() == 1).map(|v| v[0]));
 
         let p1 = bricks.len() - required.len();
-
         let p2 = required
             .into_par_iter()
             .map(|i| Self::search(i, &above, &below))
