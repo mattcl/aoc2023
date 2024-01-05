@@ -66,7 +66,7 @@ impl EnergizedSet {
     }
 
     pub fn add(&mut self, location: &Location) {
-        self.rows[location.row] |= 1 << location.col;
+        self.rows[location.row] |= 1_u128 << location.col;
     }
 
     pub fn count(&self) -> usize {
@@ -74,7 +74,7 @@ impl EnergizedSet {
     }
 
     pub fn contains(&self, location: &Location) -> bool {
-        self.rows[location.row] & 1 << location.col != 0
+        self.rows[location.row] & 1_u128 << location.col != 0
     }
 }
 

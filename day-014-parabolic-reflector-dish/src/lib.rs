@@ -340,15 +340,15 @@ impl FromStr for BitDish {
             for (col, ch) in line.chars().enumerate() {
                 match ch {
                     '#' => {
-                        cubes[row] |= 1 << (width - col - 1);
+                        cubes[row] |= 1_u128 << (width - col - 1);
                     }
-                    'O' => rounds[row] |= 1 << (width - col - 1),
+                    'O' => rounds[row] |= 1_u128 << (width - col - 1),
                     _ => {}
                 }
             }
         }
 
-        let left_border_mask = !(1 << (width - 1));
+        let left_border_mask = !(1_u128 << (width - 1));
         let right_border_mask = !1;
 
         Ok(Self {
