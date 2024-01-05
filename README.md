@@ -4,39 +4,39 @@ This workspace provides an executable named `aoc` that produces solutions for a
 given day and input. This is done either through the `run` subcommand or via a
 day-specific subcommand.
 
-## Current runtime ~33.4 ms
+## Current runtime ~28.5 ms
 
 ```
 ❯ aoc-tools criterion-summary target/criterion
 +-------------------------------------------------------------+
 | Problem                            Time (ms)   % Total Time |
 +=============================================================+
-| 001 trebuchet                        0.06723          0.201 |
-| 002 cube conundrum                   0.01480          0.044 |
-| 003 gear ratios                      0.08415          0.252 |
-| 004 scratchcards                     0.03774          0.113 |
-| 005 you give a seed a fertilizer     0.01196          0.036 |
+| 001 trebuchet                        0.06723          0.236 |
+| 002 cube conundrum                   0.01480          0.052 |
+| 003 gear ratios                      0.08415          0.295 |
+| 004 scratchcards                     0.03774          0.133 |
+| 005 you give a seed a fertilizer     0.01196          0.042 |
 | 006 wait for it                      0.00027          0.001 |
-| 007 camel cards                      0.10829          0.324 |
-| 008 haunted wasteland                0.32761          0.982 |
-| 009 mirage maintenance               0.04608          0.138 |
-| 010 pipe maze                        0.22459          0.673 |
-| 011 cosmic expansion                 0.01197          0.036 |
-| 012 hot springs                      0.56546          1.694 |
-| 013 point of incidence               0.03004          0.090 |
-| 014 parabolic reflector dish         2.48077          7.434 |
-| 015 lens library                     0.13207          0.396 |
-| 016 the floor will be lava           2.99610          8.978 |
-| 017 clumsy crucible                  7.12009         21.336 |
-| 018 lavaduct lagoon                  0.02418          0.072 |
-| 019 aplenty                          0.11363          0.341 |
-| 020 pulse propagation                1.66637          4.993 |
-| 021 step counter                     3.39329         10.168 |
-| 022 sand slabs                       1.33472          4.000 |
-| 023 a long walk                      8.98250         26.917 |
-| 024 never tell me the odds           0.25839          0.774 |
-| 025 snowverload                      3.33897         10.006 |
-| Total                               33.37128        100.000 |
+| 007 camel cards                      0.10829          0.380 |
+| 008 haunted wasteland                0.32761          1.150 |
+| 009 mirage maintenance               0.04608          0.162 |
+| 010 pipe maze                        0.22459          0.789 |
+| 011 cosmic expansion                 0.01197          0.042 |
+| 012 hot springs                      0.56546          1.985 |
+| 013 point of incidence               0.03004          0.105 |
+| 014 parabolic reflector dish         2.48077          8.711 |
+| 015 lens library                     0.13207          0.464 |
+| 016 the floor will be lava           2.99610         10.520 |
+| 017 clumsy crucible                  7.12009         25.001 |
+| 018 lavaduct lagoon                  0.02418          0.085 |
+| 019 aplenty                          0.11363          0.399 |
+| 020 pulse propagation                1.66637          5.851 |
+| 021 step counter                     3.39329         11.915 |
+| 022 sand slabs                       1.33472          4.687 |
+| 023 a long walk                      4.09091         14.364 |
+| 024 never tell me the odds           0.25839          0.907 |
+| 025 snowverload                      3.33897         11.724 |
+| Total                               28.47969        100.000 |
 +-------------------------------------------------------------+
 ```
 
