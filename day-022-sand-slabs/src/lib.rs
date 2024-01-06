@@ -91,6 +91,7 @@ pub struct SandSlabs {
 
 impl SandSlabs {
     pub fn settle(bricks: Vec<Brick>) -> (usize, usize) {
+        let num_bricks = bricks.len();
         let mut bricks = bricks;
         let mut stable_bricks: BTreeSet<StableEntry> = BTreeSet::default();
         let mut above: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
@@ -137,34 +138,43 @@ impl SandSlabs {
         let p1 = bricks.len() - required.len();
         let p2 = required
             .into_par_iter()
-            .map(|i| Self::search(i, &above, &below))
+            .map(|i| Self::search(i, &above, &below, num_bricks))
             .sum();
 
         (p1, p2)
     }
 
-    pub fn search(start: usize, above: &[Vec<usize>], below: &[Vec<usize>]) -> usize {
+    pub fn search(
+        start: usize,
+        above: &[Vec<usize>],
+        below: &[Vec<usize>],
+        num_bricks: usize,
+    ) -> usize {
         // bfs from the start
         let mut generation = vec![start];
         let mut next = Vec::default();
-        let mut removed = FxHashSet::default();
+        let mut removed = vec![false; num_bricks];
+        let mut count = 0;
+        removed[start] = true;
 
         while !generation.is_empty() {
-            for i in generation.iter() {
-                removed.insert(*i);
-            }
-
             for i in generation.drain(..) {
-                next.extend(
-                    above[i]
-                        .iter()
-                        .filter(|c| below[**c].iter().all(|b| removed.contains(b))),
-                );
+                for n in above[i].iter() {
+                    if removed[*n] {
+                        continue;
+                    }
+
+                    if below[*n].iter().all(|b| removed[*b]) {
+                        removed[*n] = true;
+                        count += 1;
+                        next.push(*n);
+                    }
+                }
             }
             std::mem::swap(&mut generation, &mut next);
         }
 
-        removed.len() - 1
+        count
     }
 }
 
