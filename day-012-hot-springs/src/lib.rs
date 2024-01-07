@@ -1,4 +1,4 @@
-use std::{hash::BuildHasherDefault, str::FromStr};
+use std::str::FromStr;
 
 use aoc_plumbing::Problem;
 use itertools::Itertools;
@@ -41,6 +41,71 @@ fn parse_spring(input: &str) -> IResult<&str, Spring> {
 
 fn parse_springs(input: &str) -> IResult<&str, Vec<Spring>> {
     separated_list1(newline, parse_spring)(input)
+}
+
+pub fn fast_arrangements(input: &[u8], groups: &[u8]) -> usize {
+    let mut damaged_segments = vec![0; input.len()];
+    let mut cur_segment = 0;
+    let mut first_damaged = input.len();
+
+    for (i, ch) in input.iter().copied().enumerate() {
+        if ch != b'.' {
+            cur_segment += 1;
+        } else {
+            cur_segment = 0;
+        }
+
+        if ch == b'#' && i < first_damaged {
+            first_damaged = i;
+        }
+        damaged_segments[i] = cur_segment;
+    }
+
+    let mut cur = vec![0; input.len() + 1];
+    let mut prev = vec![0; input.len() + 1];
+
+    #[allow(clippy::needless_range_loop)]
+    for i in 0..=first_damaged {
+        prev[i] = 1;
+    }
+
+    for (idx, count) in groups.iter().copied().enumerate() {
+        let count = count as usize;
+        cur[0] = 0;
+        for end in 0..input.len() {
+            let last = input[end];
+            let mut cur_count = 0;
+            if last != b'#' {
+                cur_count += cur[end];
+            }
+
+            if last != b'.' {
+                let next_damaged = input.get(end + 1).filter(|v| **v == b'#').is_some();
+                if !next_damaged && damaged_segments[end] >= count {
+                    let previous_undamaged = end
+                        .checked_sub(count)
+                        .map(|i| input[i])
+                        .filter(|v| *v == b'#')
+                        .is_none();
+                    if previous_undamaged {
+                        cur_count += end.checked_sub(count).map(|i| prev[i]).unwrap_or_else(|| {
+                            if idx == 0 {
+                                1
+                            } else {
+                                0
+                            }
+                        });
+                    }
+                }
+            }
+
+            cur[end + 1] = cur_count;
+        }
+
+        std::mem::swap(&mut cur, &mut prev);
+    }
+
+    prev[input.len()]
 }
 
 pub fn arrangements(
@@ -157,10 +222,7 @@ impl HotSprings {
     pub fn count_arrangements(&self) -> usize {
         self.springs
             .par_iter()
-            .map(|s| {
-                let mut seen = FxHashMap::default();
-                arrangements(s.key.as_bytes(), &s.groups, &mut seen)
-            })
+            .map(|s| fast_arrangements(s.key.as_bytes(), &s.groups))
             .sum()
     }
 
@@ -177,10 +239,7 @@ impl HotSprings {
                     .take(5 * s.groups.len())
                     .collect();
 
-                let mut seen =
-                    FxHashMap::with_capacity_and_hasher(5000, BuildHasherDefault::default());
-
-                arrangements(long_key.as_bytes(), &long_groups, &mut seen)
+                fast_arrangements(long_key.as_bytes(), &long_groups)
             })
             .sum()
     }
