@@ -140,9 +140,9 @@ impl YouGiveASeedAFertilizer {
             .map(|(start, len)| Interval::new(*start, *start + *len - 1))
             .collect::<Vec<_>>();
 
-        for map in self.range_maps.iter() {
-            let mut next_ranges = Vec::with_capacity(ranges.len());
+        let mut next_ranges = Vec::with_capacity(ranges.len());
 
+        for map in self.range_maps.iter() {
             'splitter: while let Some(range) = ranges.pop() {
                 for entry in map.entries.iter() {
                     match range.partition_by(&entry.source) {
@@ -186,7 +186,7 @@ impl YouGiveASeedAFertilizer {
                 next_ranges.push(range);
             }
 
-            ranges = next_ranges;
+            std::mem::swap(&mut ranges, &mut next_ranges);
         }
 
         ranges.iter().map(|c| c.start).min().unwrap_or_default()
