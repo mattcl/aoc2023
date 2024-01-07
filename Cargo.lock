@@ -132,7 +132,7 @@ dependencies = [
 
 [[package]]
 name = "aoc-cli"
-version = "0.25.11"
+version = "0.25.12"
 dependencies = [
  "a-long-walk",
  "anyhow",
@@ -169,9 +169,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-collections"
-version = "0.3.5"
+version = "0.3.6"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "65bcccdecbb9bd38c87634a0ae5be29c93af6933ad9733f17ee9f1de6efbd87c"
+checksum = "a0a770ecee3bf4feffb0dc0fb7f83e1593d7d5b6c56cf73bf8144d59aa0183b2"
 dependencies = [
  "aoc-conversions",
  "aoc-directions",
@@ -179,6 +179,7 @@ dependencies = [
  "aoc-types",
  "indexmap 1.9.3",
  "nom",
+ "num",
  "rustc-hash",
  "thiserror",
 ]
@@ -204,9 +205,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-geometry"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "bcc803e1855e01ad6d1f2fa6123545faf78c0dccd089c72d1fd438d1e577ec0d"
+checksum = "02abf3e0b361a2ff86b8c5bd722289ba4cd2e78558bf0d26803e7e3ae1622bf2"
 dependencies = [
  "aoc-directions",
  "num",
@@ -237,9 +238,9 @@ dependencies = [
 
 [[package]]
 name = "aoc-std"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://gitea.hl.ancalagon.black/matt/_cargo-index.git"
-checksum = "bb3050dea0b7f5adc2fc6e761b7bf1c561473ef17b279a0fd1d886e866ed9e28"
+checksum = "3d05627ce5753ba74ca6dbcbc90e9795dfee90a6c65c78eae77a98636d48efd7"
 dependencies = [
  "aoc-collections",
  "aoc-conversions",
@@ -384,9 +385,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.4.12"
+version = "4.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcfab8ba68f3668e89f6ff60f5b205cea56aa7b769451a59f34b8682f51c056d"
+checksum = "52bdc885e4cacc7f7c9eedc1ef6da641603180c783c41a15c264944deeaab642"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -423,7 +424,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.47",
+ "syn 2.0.48",
 ]
 
 [[package]]
@@ -573,7 +574,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semver",
- "syn 2.0.47",
+ "syn 2.0.48",
 ]
 
 [[package]]
@@ -1125,9 +1126,9 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.75"
+version = "1.0.76"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "907a61bd0f64c2f29cd1cf1dc34d05176426a3f504a78010f08416ddb7b13708"
+checksum = "95fc56cda0b5c3325f5fbbd7ff9fda9e02bb00bb3dac51252d2f1bfa1cb8cc8c"
 dependencies = [
  "unicode-ident",
 ]
@@ -1325,22 +1326,22 @@ checksum = "b97ed7a9823b74f99c7742f5336af7be5ecd3eeafcb1507d1fa93347b1d589b0"
 
 [[package]]
 name = "serde"
-version = "1.0.194"
+version = "1.0.195"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b114498256798c94a0689e1a15fec6005dee8ac1f41de56404b67afc2a4b773"
+checksum = "63261df402c67811e9ac6def069e4786148c4563f4b50fd4bf30aa370d626b02"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.194"
+version = "1.0.195"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3385e45322e8f9931410f01b3031ec534c3947d0e94c18049af4d9f9907d4e0"
+checksum = "46fe8f8603d81ba86327b23a2e9cdf49e1255fb94a4c5f297f6ee0547178ea2c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.47",
+ "syn 2.0.48",
 ]
 
 [[package]]
@@ -1418,9 +1419,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.47"
+version = "2.0.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1726efe18f42ae774cc644f330953a5e7b3c3003d3edcecf18850fe9d4dd9afb"
+checksum = "0f3531638e407dfc0814761abb7c00a5b54992b849452a0646b7f65c9f770f3f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1474,7 +1475,7 @@ checksum = "fa0faa943b50f3db30a20aa7e265dbc66076993efed8463e8de414e5d06d3471"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.47",
+ "syn 2.0.48",
 ]
 
 [[package]]
@@ -1570,7 +1571,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.47",
+ "syn 2.0.48",
  "wasm-bindgen-shared",
 ]
 
@@ -1592,7 +1593,7 @@ checksum = "f0eb82fcb7930ae6219a7ecfd55b217f5f0893484b7a13022ebb2b2bf20b5283"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.47",
+ "syn 2.0.48",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]

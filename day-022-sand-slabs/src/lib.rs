@@ -1,7 +1,7 @@
-use std::{collections::BTreeSet, str::FromStr};
+use std::str::FromStr;
 
 use aoc_plumbing::Problem;
-use aoc_std::geometry::{Cube, Intersect, Point3D, Rectangle};
+use aoc_std::geometry::{Cube, Point2D, Point3D};
 use nom::{
     character::complete::{self, newline},
     combinator,
@@ -10,22 +10,16 @@ use nom::{
     IResult,
 };
 use rayon::prelude::*;
-use rustc_hash::FxHashSet;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Brick {
     cube: Cube<i16>,
-    horiz_rect: Rectangle<i16>,
 }
 
 impl Brick {
     pub fn new(p1: Point3D<i16>, p2: Point3D<i16>) -> Self {
         let cube = Cube::new(p1, p2);
-        // we'll just store this instead of having to compute it each collision
-        // check
-        let horiz_rect = cube.xy_face();
-
-        Self { cube, horiz_rect }
+        Self { cube }
     }
 
     pub fn set_z(&mut self, value: i16) {
@@ -33,8 +27,12 @@ impl Brick {
         self.cube.translate_z(delta);
     }
 
-    pub fn z_collision_with(&self, other: &Self) -> bool {
-        self.horiz_rect.intersection(&other.horiz_rect).is_some()
+    pub fn points(&self) -> impl Iterator<Item = Point2D<i16>> {
+        let sx = self.cube.start.x.min(self.cube.end.x);
+        let ex = self.cube.start.x.max(self.cube.end.x);
+        let sy = self.cube.start.y.min(self.cube.end.y);
+        let ey = self.cube.start.y.max(self.cube.end.y);
+        (sx..=ex).flat_map(move |x| (sy..=ey).map(move |y| Point2D::new(x, y)))
     }
 }
 
@@ -93,50 +91,76 @@ impl SandSlabs {
     pub fn settle(bricks: Vec<Brick>) -> (usize, usize) {
         let num_bricks = bricks.len();
         let mut bricks = bricks;
-        let mut stable_bricks: BTreeSet<StableEntry> = BTreeSet::default();
-        let mut above: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
-        let mut below: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
+        let mut max_x = 0;
+        let mut max_y = 0;
 
-        for i in 0..bricks.len() {
-            let brick = bricks[i];
-
-            if brick.cube.start.z > 1 {
-                let mut max_height = -1;
-                for entry in stable_bricks.iter() {
-                    let cur_b = bricks[entry.index];
-                    let next_z = entry.z_height + 1;
-
-                    if next_z >= max_height {
-                        if cur_b.z_collision_with(&brick) {
-                            if max_height == -1 {
-                                max_height = next_z;
-                            }
-
-                            above[entry.index].push(i);
-                            below[i].push(entry.index);
-                        }
-                    } else {
-                        break;
-                    }
-                }
-
-                if max_height == -1 {
-                    bricks[i].set_z(1);
-                } else {
-                    bricks[i].set_z(max_height);
-                }
+        for b in bricks.iter() {
+            if b.cube.start.x > max_x {
+                max_x = b.cube.start.x;
             }
 
-            stable_bricks.insert(StableEntry {
-                index: i,
-                z_height: bricks[i].cube.end.z,
-            });
+            if b.cube.end.x > max_x {
+                max_x = b.cube.end.x;
+            }
+
+            if b.cube.start.y > max_y {
+                max_y = b.cube.start.y;
+            }
+
+            if b.cube.end.y > max_y {
+                max_y = b.cube.end.y;
+            }
         }
 
-        let required = FxHashSet::from_iter(below.iter().filter(|b| b.len() == 1).map(|v| v[0]));
+        // this is a Vec<Vec<brick index>>
+        let mut topology = vec![vec![usize::MAX; max_x as usize + 1]; max_y as usize + 1];
+        let mut above: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
+        let mut below: Vec<Vec<usize>> = vec![Vec::default(); bricks.len()];
+        let mut required = vec![false; bricks.len()];
 
-        let p1 = bricks.len() - required.len();
-        let p2 = required
+        let mut highest_idxs = Vec::new();
+        for i in 0..bricks.len() {
+            let brick = &bricks[i];
+
+            let mut highest = 0;
+
+            for Point2D { x, y } in brick.points() {
+                let idx = topology[y as usize][x as usize];
+                if idx != usize::MAX && bricks[idx].cube.end.z >= highest {
+                    if bricks[idx].cube.end.z > highest {
+                        highest_idxs.clear();
+                    }
+
+                    if highest_idxs.is_empty() || highest_idxs[highest_idxs.len() - 1] != idx {
+                        highest_idxs.push(idx);
+                    }
+
+                    highest = bricks[idx].cube.end.z;
+                }
+                topology[y as usize][x as usize] = i;
+            }
+
+            if highest_idxs.len() == 1 {
+                required[highest_idxs[0]] = true;
+            }
+
+            for idx in highest_idxs.drain(..) {
+                above[idx].push(i);
+                below[i].push(idx);
+            }
+
+            bricks[i].set_z(highest + 1);
+        }
+
+        let required_idxs = required
+            .into_iter()
+            .enumerate()
+            .filter(|(_, v)| *v)
+            .map(|(idx, _)| idx)
+            .collect::<Vec<_>>();
+
+        let p1 = bricks.len() - required_idxs.len();
+        let p2 = required_idxs
             .into_par_iter()
             .map(|i| Self::search(i, &above, &below, num_bricks))
             .sum();
