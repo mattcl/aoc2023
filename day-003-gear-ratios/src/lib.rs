@@ -2,7 +2,6 @@ use std::str::FromStr;
 
 use aoc_plumbing::Problem;
 use aoc_std::{collections::Grid, directions::BoundedCardinalNeighbors, geometry::Location};
-use rustc_hash::FxHashSet;
 
 #[derive(Debug, Clone)]
 pub struct GearRatios {
@@ -18,7 +17,7 @@ impl GearRatios {
         iter: I,
         part_total: &mut u32,
         gear_total: &mut u32,
-        processed: &mut FxHashSet<Location>,
+        processed: &mut [Vec<bool>],
         is_star: bool,
     ) where
         I: Iterator<Item = (Location, char)>,
@@ -26,11 +25,11 @@ impl GearRatios {
         let mut count = 0;
         let mut sub_prod = 1;
         'outer: for (can, ch) in iter {
-            if processed.contains(&can) {
+            if processed[can.row][can.col] {
                 continue;
             }
 
-            processed.insert(can);
+            processed[can.row][can.col] = true;
 
             let mut digits: u32 = 1;
             // we know this is safe
@@ -40,14 +39,14 @@ impl GearRatios {
             let mut working = can;
             while let Some(west) = working.west() {
                 if let Some(v) = chars.get(&west) {
-                    if processed.contains(&west) {
+                    if processed[west.row][west.col] {
                         continue 'outer;
                     }
                     if v.is_ascii_digit() {
                         working = west;
                         number += v.to_digit(10).unwrap() * 10_u32.pow(digits);
                         digits += 1;
-                        processed.insert(west);
+                        processed[west.row][west.col] = true;
                         continue;
                     }
                 }
@@ -58,13 +57,13 @@ impl GearRatios {
             let mut working = can;
             while let Some(east) = working.east() {
                 if let Some(v) = chars.get(&east) {
-                    if processed.contains(&east) {
+                    if processed[east.row][east.col] {
                         continue 'outer;
                     }
                     if v.is_ascii_digit() {
                         working = east;
                         number = number * 10 + v.to_digit(10).unwrap();
-                        processed.insert(east);
+                        processed[east.row][east.col] = true;
                         continue;
                     }
                 }
@@ -90,7 +89,7 @@ impl FromStr for GearRatios {
 
         let mut part_total = 0;
         let mut gear_total = 0;
-        let mut processed = FxHashSet::default();
+        let mut processed = vec![vec![false; chars.width()]; chars.height()];
 
         for row in 0..chars.height() {
             for col in 0..chars.width() {
