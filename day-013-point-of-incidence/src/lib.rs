@@ -8,7 +8,6 @@ use aoc_plumbing::Problem;
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BitMirror {
     horizontal: Vec<u32>,
-    vertical: Vec<u32>,
     width: usize,
     height: usize,
 }
@@ -20,17 +19,15 @@ impl FromStr for BitMirror {
         let width = s.lines().next().map(|l| l.len()).unwrap_or_default();
 
         let mut mirror = Self {
-            vertical: vec![0; width],
             width,
             ..Default::default()
         };
 
-        for (row, line) in s.lines().enumerate() {
+        for line in s.lines() {
             mirror
                 .horizontal
                 .push(line.chars().enumerate().fold(0, |acc, (col, ch)| {
                     if ch == '#' {
-                        mirror.vertical[col] |= 1 << row;
                         acc | (1 << col)
                     } else {
                         acc
@@ -84,20 +81,16 @@ impl BitMirror {
     }
 
     pub fn reflect_vertical(&self) -> Option<usize> {
-        'outer: for i in 1..self.height {
-            let limit = self.height - i;
-            let adjust = 32 - limit.min(i);
-            let mask = u32::MAX >> adjust;
-            let shift = if limit < i { i - limit } else { 0 };
-            for col in self.vertical.iter() {
-                let reversed = (col >> i).reverse_bits() >> adjust;
-                let masked = (col >> shift) & mask;
-                if masked != reversed {
+        'outer: for i in 0..(self.height - 1) {
+            let limit = self.height - i - 2;
+            // expand outward
+            for delta in 0..=i.min(limit) {
+                if self.horizontal[i - delta] != self.horizontal[i + 1 + delta] {
                     continue 'outer;
                 }
             }
 
-            return Some(i * 100);
+            return Some((i + 1) * 100);
         }
 
         None
@@ -129,16 +122,13 @@ impl BitMirror {
     }
 
     pub fn reflect_vertical_one_off(&self) -> Option<usize> {
-        'outer: for i in 1..self.height {
+        'outer: for i in 0..(self.height - 1) {
             let mut one_count = 0;
-            let limit = self.height - i;
-            let adjust = 32 - limit.min(i);
-            let mask = u32::MAX >> adjust;
-            let shift = if limit < i { i - limit } else { 0 };
-            for col in self.vertical.iter() {
-                let reversed = (col >> i).reverse_bits() >> adjust;
-                let masked = (col >> shift) & mask;
-                one_count += (masked ^ reversed).count_ones();
+            let limit = self.height - i - 2;
+            // expand outward
+            for delta in 0..=i.min(limit) {
+                one_count +=
+                    (self.horizontal[i - delta] ^ self.horizontal[i + 1 + delta]).count_ones();
 
                 if one_count > 1 {
                     continue 'outer;
@@ -146,7 +136,7 @@ impl BitMirror {
             }
 
             if one_count == 1 {
-                return Some(i * 100);
+                return Some((i + 1) * 100);
             }
         }
 
