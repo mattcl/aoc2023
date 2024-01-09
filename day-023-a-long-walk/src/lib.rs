@@ -72,6 +72,12 @@ impl LayerSet {
     pub fn any_above(&self, layer: usize) -> bool {
         ((layer + 1)..self.layer_counts.len()).any(|l| self.remaining_nodes_at_layer(l))
     }
+
+    pub fn count_above(&self, layer: usize) -> usize {
+        ((layer + 1)..self.layer_counts.len())
+            .filter(|l| self.remaining_nodes_at_layer(*l))
+            .count()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -498,11 +504,18 @@ impl<const N: usize> ALongWalkGen<N> {
         let can_move_away_from_end = next_layer_set.remaining_nodes_at_layer(node.layer);
 
         // Edit: this is apparently an invalid assumption on all inputs.
+        //
+        // We're going to instead count the nodes above us and bail if it's more
+        // than 1, since 1 is the most unvisited nodes I've encountered in an
+        // input so far
+        //
         // we know we have to visit all the nodes, so bail if we have any
         // unvisited nodes above us and we would have to move towards the end
-        // if !can_move_away_from_end && next_layer_set.any_above(node.layer) {
-        //     return;
-        // }
+        if !can_move_away_from_end && next_layer_set.any_above(node.layer) {
+            if next_layer_set.count_above(node.layer) > 1 {
+                return;
+            }
+        }
 
         for (next_idx, dist) in node.neighbors.iter() {
             let next_node = &graph[*next_idx];
