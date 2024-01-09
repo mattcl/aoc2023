@@ -497,11 +497,12 @@ impl<const N: usize> ALongWalkGen<N> {
         next_layer_set.decrement(node.layer);
         let can_move_away_from_end = next_layer_set.remaining_nodes_at_layer(node.layer);
 
+        // Edit: this is apparently an invalid assumption on all inputs.
         // we know we have to visit all the nodes, so bail if we have any
         // unvisited nodes above us and we would have to move towards the end
-        if !can_move_away_from_end && next_layer_set.any_above(node.layer) {
-            return;
-        }
+        // if !can_move_away_from_end && next_layer_set.any_above(node.layer) {
+        //     return;
+        // }
 
         for (next_idx, dist) in node.neighbors.iter() {
             let next_node = &graph[*next_idx];
