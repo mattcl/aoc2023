@@ -149,7 +149,8 @@ impl<const A: i64, const B: i64> NeverTellMeTheOddsGen<A, B> {
                           ll[(1, 0)], ll[(1, 1)], ll[(1, 2)], lr[(1, 0)], lr[(1, 1)], lr[(1, 2)];
                           ll[(2, 0)], ll[(2, 1)], ll[(2, 2)], lr[(2, 0)], lr[(2, 1)], lr[(2, 2)]];
 
-        let res = mat.try_inverse().unwrap() * rhs;
+        let decomp = mat.lu();
+        let res = decomp.solve(&rhs).expect("Linear resolution failed.");
 
         // pray to the gods of floating point, I guess
         res[0].round() as i64 + res[1].round() as i64 + res[2].round() as i64
