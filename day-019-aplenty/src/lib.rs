@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use aoc_plumbing::Problem;
-use aoc_std::geometry::Interval;
+use aoc_std::geometry::{Interval, IntervalSplit};
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -322,116 +322,148 @@ impl Aplenty {
                             value,
                             decision,
                         } => match key {
-                            Key::X => {
-                                if interval_set.x.contains_value(*value - 1) {
-                                    let mut next_set = interval_set;
-                                    next_set.x = Interval::new(next_set.x.start, *value - 1);
-                                    intervals.push((next_set, *decision, 0));
+                            Key::X => match interval_set.x.split_at(*value - 1) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
                                 }
-
-                                if interval_set.x.contains_value(*value) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.x = Interval::new(*value, next_set.x.end);
+                                    next_set.x = left;
+                                    intervals.push((next_set, *decision, 0));
+
+                                    let mut next_set = interval_set;
+                                    next_set.x = right;
                                     intervals.push((next_set, old_decision, rule_idx + 1));
                                 }
-                            }
-                            Key::M => {
-                                if interval_set.m.contains_value(*value - 1) {
-                                    let mut next_set = interval_set;
-                                    next_set.m = Interval::new(next_set.m.start, *value - 1);
-                                    intervals.push((next_set, *decision, 0));
+                            },
+                            Key::M => match interval_set.m.split_at(*value - 1) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
                                 }
-
-                                if interval_set.m.contains_value(*value) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.m = Interval::new(*value, next_set.m.end);
+                                    next_set.m = left;
+                                    intervals.push((next_set, *decision, 0));
+
+                                    let mut next_set = interval_set;
+                                    next_set.m = right;
                                     intervals.push((next_set, old_decision, rule_idx + 1));
                                 }
-                            }
-                            Key::A => {
-                                if interval_set.a.contains_value(*value - 1) {
-                                    let mut next_set = interval_set;
-                                    next_set.a = Interval::new(next_set.a.start, *value - 1);
-                                    intervals.push((next_set, *decision, 0));
+                            },
+                            Key::A => match interval_set.a.split_at(*value - 1) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
                                 }
-
-                                if interval_set.a.contains_value(*value) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.a = Interval::new(*value, next_set.a.end);
+                                    next_set.a = left;
+                                    intervals.push((next_set, *decision, 0));
+
+                                    let mut next_set = interval_set;
+                                    next_set.a = right;
                                     intervals.push((next_set, old_decision, rule_idx + 1));
                                 }
-                            }
-                            Key::S => {
-                                if interval_set.s.contains_value(*value - 1) {
-                                    let mut next_set = interval_set;
-                                    next_set.s = Interval::new(next_set.s.start, *value - 1);
-                                    intervals.push((next_set, *decision, 0));
+                            },
+                            Key::S => match interval_set.s.split_at(*value - 1) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
                                 }
-
-                                if interval_set.s.contains_value(*value) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.s = Interval::new(*value, next_set.s.end);
+                                    next_set.s = left;
+                                    intervals.push((next_set, *decision, 0));
+
+                                    let mut next_set = interval_set;
+                                    next_set.s = right;
                                     intervals.push((next_set, old_decision, rule_idx + 1));
                                 }
-                            }
+                            },
                         },
                         Rule::GreaterThan {
                             key,
                             value,
                             decision,
                         } => match key {
-                            Key::X => {
-                                if interval_set.x.contains_value(*value) {
-                                    let mut next_set = interval_set;
-                                    next_set.x = Interval::new(next_set.x.start, *value);
-                                    intervals.push((next_set, old_decision, rule_idx + 1));
+                            Key::X => match interval_set.x.split_at(*value) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
                                 }
-
-                                if interval_set.x.contains_value(*value + 1) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.x = Interval::new(*value + 1, next_set.x.end);
+                                    next_set.x = left;
+                                    intervals.push((next_set, old_decision, rule_idx + 1));
+
+                                    let mut next_set = interval_set;
+                                    next_set.x = right;
                                     intervals.push((next_set, *decision, 0));
                                 }
-                            }
-                            Key::M => {
-                                if interval_set.m.contains_value(*value) {
-                                    let mut next_set = interval_set;
-                                    next_set.m = Interval::new(next_set.m.start, *value);
-                                    intervals.push((next_set, old_decision, rule_idx + 1));
+                            },
+                            Key::M => match interval_set.m.split_at(*value) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
                                 }
-
-                                if interval_set.m.contains_value(*value + 1) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.m = Interval::new(*value + 1, next_set.m.end);
+                                    next_set.m = left;
+                                    intervals.push((next_set, old_decision, rule_idx + 1));
+
+                                    let mut next_set = interval_set;
+                                    next_set.m = right;
                                     intervals.push((next_set, *decision, 0));
                                 }
-                            }
-                            Key::A => {
-                                if interval_set.a.contains_value(*value) {
-                                    let mut next_set = interval_set;
-                                    next_set.a = Interval::new(next_set.a.start, *value);
-                                    intervals.push((next_set, old_decision, rule_idx + 1));
+                            },
+                            Key::A => match interval_set.a.split_at(*value) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
                                 }
-
-                                if interval_set.a.contains_value(*value + 1) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.a = Interval::new(*value + 1, next_set.a.end);
+                                    next_set.a = left;
+                                    intervals.push((next_set, old_decision, rule_idx + 1));
+
+                                    let mut next_set = interval_set;
+                                    next_set.a = right;
                                     intervals.push((next_set, *decision, 0));
                                 }
-                            }
-                            Key::S => {
-                                if interval_set.s.contains_value(*value) {
-                                    let mut next_set = interval_set;
-                                    next_set.s = Interval::new(next_set.s.start, *value);
-                                    intervals.push((next_set, old_decision, rule_idx + 1));
+                            },
+                            Key::S => match interval_set.s.split_at(*value) {
+                                IntervalSplit::Left { .. } => {
+                                    intervals.push((interval_set, old_decision, rule_idx + 1));
                                 }
-
-                                if interval_set.s.contains_value(*value + 1) {
+                                IntervalSplit::Right { .. } => {
+                                    intervals.push((interval_set, *decision, 0));
+                                }
+                                IntervalSplit::Bisecting { left, right } => {
                                     let mut next_set = interval_set;
-                                    next_set.s = Interval::new(*value + 1, next_set.s.end);
+                                    next_set.s = left;
+                                    intervals.push((next_set, old_decision, rule_idx + 1));
+
+                                    let mut next_set = interval_set;
+                                    next_set.s = right;
                                     intervals.push((next_set, *decision, 0));
                                 }
-                            }
+                            },
                         },
                         Rule::AlwaysReject => { /* do nothing */ }
                     }
