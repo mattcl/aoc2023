@@ -128,32 +128,45 @@ impl<const A: i64, const B: i64> NeverTellMeTheOddsGen<A, B> {
     }
 
     pub fn find_rock_origin(&self) -> i64 {
-        let h0 = VectorHail::from(self.hail[0]);
-        let h1 = VectorHail::from(self.hail[1]);
-        let h2 = VectorHail::from(self.hail[2]);
+        for i in 0..20 {
+            let h0 = VectorHail::from(self.hail[i]);
+            let h1 = VectorHail::from(self.hail[i + 1]);
+            let h2 = VectorHail::from(self.hail[i + 2]);
 
-        let top = -h0.position.cross(&h0.velocity) + h1.position.cross(&h1.velocity);
-        let bot = -h0.position.cross(&h0.velocity) + h2.position.cross(&h2.velocity);
+            let top = -h0.position.cross(&h0.velocity) + h1.position.cross(&h1.velocity);
+            let bot = -h0.position.cross(&h0.velocity) + h2.position.cross(&h2.velocity);
 
-        let rhs = vector![top[0], top[1], top[2], bot[0], bot[1], bot[2]];
+            let rhs = vector![top[0], top[1], top[2], bot[0], bot[1], bot[2]];
 
-        let ul = h0.velocity.cross_matrix() - h1.velocity.cross_matrix();
-        let ll = h0.velocity.cross_matrix() - h2.velocity.cross_matrix();
-        let ur = -h0.position.cross_matrix() + h1.position.cross_matrix();
-        let lr = -h0.position.cross_matrix() + h2.position.cross_matrix();
+            let ul = h0.velocity.cross_matrix() - h1.velocity.cross_matrix();
+            let ll = h0.velocity.cross_matrix() - h2.velocity.cross_matrix();
+            let ur = -h0.position.cross_matrix() + h1.position.cross_matrix();
+            let lr = -h0.position.cross_matrix() + h2.position.cross_matrix();
 
-        let mat = matrix![ul[(0, 0)], ul[(0, 1)], ul[(0, 2)], ur[(0, 0)], ur[(0, 1)], ur[(0, 2)];
-                          ul[(1, 0)], ul[(1, 1)], ul[(1, 2)], ur[(1, 0)], ur[(1, 1)], ur[(1, 2)];
-                          ul[(2, 0)], ul[(2, 1)], ul[(2, 2)], ur[(2, 0)], ur[(2, 1)], ur[(2, 2)];
-                          ll[(0, 0)], ll[(0, 1)], ll[(0, 2)], lr[(0, 0)], lr[(0, 1)], lr[(0, 2)];
-                          ll[(1, 0)], ll[(1, 1)], ll[(1, 2)], lr[(1, 0)], lr[(1, 1)], lr[(1, 2)];
-                          ll[(2, 0)], ll[(2, 1)], ll[(2, 2)], lr[(2, 0)], lr[(2, 1)], lr[(2, 2)]];
+            let mat = matrix![ul[(0, 0)], ul[(0, 1)], ul[(0, 2)], ur[(0, 0)], ur[(0, 1)], ur[(0, 2)];
+                              ul[(1, 0)], ul[(1, 1)], ul[(1, 2)], ur[(1, 0)], ur[(1, 1)], ur[(1, 2)];
+                              ul[(2, 0)], ul[(2, 1)], ul[(2, 2)], ur[(2, 0)], ur[(2, 1)], ur[(2, 2)];
+                              ll[(0, 0)], ll[(0, 1)], ll[(0, 2)], lr[(0, 0)], lr[(0, 1)], lr[(0, 2)];
+                              ll[(1, 0)], ll[(1, 1)], ll[(1, 2)], lr[(1, 0)], lr[(1, 1)], lr[(1, 2)];
+                              ll[(2, 0)], ll[(2, 1)], ll[(2, 2)], lr[(2, 0)], lr[(2, 1)], lr[(2, 2)]];
 
-        let decomp = mat.lu();
-        let res = decomp.solve(&rhs).expect("Linear resolution failed.");
+            let lu_decomp = mat.lu();
+            let qr_decomp = mat.qr();
 
-        // pray to the gods of floating point, I guess
-        res[0].round() as i64 + res[1].round() as i64 + res[2].round() as i64
+            let res = lu_decomp.solve(&rhs).expect("Linear resolution failed.");
+            // pray to the gods of floating point, I guess
+            let a1 = res[0].round() as i64 + res[1].round() as i64 + res[2].round() as i64;
+
+            let res = qr_decomp.solve(&rhs).expect("Linear resolution failed.");
+            // pray to the gods of floating point, I guess
+            let a2 = res[0].round() as i64 + res[1].round() as i64 + res[2].round() as i64;
+
+            if a1 == a2 {
+                return a1;
+            }
+        }
+
+        unreachable!("Could not agree on a solution in 20 attempts");
     }
 }
 
